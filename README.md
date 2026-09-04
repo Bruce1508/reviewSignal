@@ -7,6 +7,7 @@
 
 ### An AI customer intelligence platform that turns Google reviews into an operating signal.
 
+[![License: MIT](https://img.shields.io/badge/license-MIT-3da639)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.12+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Next.js](https://img.shields.io/badge/Next.js-15-000000?logo=nextdotjs&logoColor=white)](https://nextjs.org/)
@@ -294,3 +295,12 @@ differentiators are the adaptive taxonomy, the human-in-the-loop taxonomy lifecy
 anomaly detection, evaluation against human labels, and a measurable feedback-to-action loop.
 
 APIs, schema, and product surfaces will keep evolving while the phases above land.
+
+---
+
+## License
+
+ReviewSignal AI is released under the [MIT License](LICENSE).
+
+The excluded product requirements document (`docs/PRD.md`) is client material and is not covered by
+this licence, because it is not distributed with this repository.
