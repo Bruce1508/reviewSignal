@@ -1,0 +1,19 @@
+{
+  "name": "accounts/111111111111111111111/locations/22222222222222222222/reviews/rev-normal-001",
+  "reviewId": "rev-normal-001",
+  "reviewer": {
+    "profilePhotoUrl": "https://example.com/photo.jpg",
+    "displayName": "Jane D.",
+    "isAnonymous": false
+  },
+  "starRating": "FIVE",
+  "comment": "Great service, the prints came out beautifully.",
+  "createTime": "2026-01-15T10:30:00.000Z",
+  "updateTime": "2026-01-15T10:30:00.000Z",
+  "reviewReply": {
+    "comment": "Thanks so much for the kind words!",
+    "updateTime": "2026-01-16T09:00:00Z"
+  },
+  "reviewMediaItems": [],
+  "reviewReplyUrl": "https://business.google.com/reviews/reply/rev-normal-001"
+}

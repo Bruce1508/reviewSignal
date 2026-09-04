@@ -1,0 +1,12 @@
+{
+  "name": "accounts/111111111111111111111/locations/22222222222222222222/reviews/rev-missing-create-time",
+  "reviewId": "rev-missing-create-time",
+  "reviewer": {
+    "profilePhotoUrl": "https://example.com/photo10.jpg",
+    "displayName": "Taylor Q.",
+    "isAnonymous": false
+  },
+  "starRating": "FIVE",
+  "comment": "This payload is missing createTime.",
+  "updateTime": "2026-02-10T09:00:00Z"
+}

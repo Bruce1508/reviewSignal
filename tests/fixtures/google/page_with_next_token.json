@@ -1,0 +1,33 @@
+{
+  "reviews": [
+    {
+      "name": "accounts/111111111111111111111/locations/22222222222222222222/reviews/rev-page1-a",
+      "reviewId": "rev-page1-a",
+      "reviewer": {
+        "profilePhotoUrl": "https://example.com/photo6.jpg",
+        "displayName": "Chris B.",
+        "isAnonymous": false
+      },
+      "starRating": "FIVE",
+      "comment": "Fast and friendly.",
+      "createTime": "2026-02-07T09:00:00Z",
+      "updateTime": "2026-02-07T09:00:00Z"
+    },
+    {
+      "name": "accounts/111111111111111111111/locations/22222222222222222222/reviews/rev-page1-b",
+      "reviewId": "rev-page1-b",
+      "reviewer": {
+        "profilePhotoUrl": "https://example.com/photo7.jpg",
+        "displayName": "Dana W.",
+        "isAnonymous": false
+      },
+      "starRating": "ONE",
+      "comment": "Prints were blurry.",
+      "createTime": "2026-02-07T10:00:00Z",
+      "updateTime": "2026-02-07T10:00:00Z"
+    }
+  ],
+  "averageRating": 4.1,
+  "totalReviewCount": 42,
+  "nextPageToken": "opaque-page-token-abc"
+}

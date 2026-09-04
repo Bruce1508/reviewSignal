@@ -1,0 +1,19 @@
+{
+  "reviews": [
+    {
+      "name": "accounts/111111111111111111111/locations/22222222222222222222/reviews/rev-page-last",
+      "reviewId": "rev-page-last",
+      "reviewer": {
+        "profilePhotoUrl": "https://example.com/photo8.jpg",
+        "displayName": "Evan P.",
+        "isAnonymous": false
+      },
+      "starRating": "FOUR",
+      "comment": "Good value.",
+      "createTime": "2026-02-08T09:00:00Z",
+      "updateTime": "2026-02-08T09:00:00Z"
+    }
+  ],
+  "averageRating": 4.1,
+  "totalReviewCount": 42
+}

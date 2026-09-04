@@ -1,0 +1,12 @@
+{
+  "name": "accounts/111111111111111111111/locations/22222222222222222222/reviews/rev-rating-only-absent",
+  "reviewId": "rev-rating-only-absent",
+  "reviewer": {
+    "profilePhotoUrl": "https://example.com/photo2.jpg",
+    "displayName": "Sam K.",
+    "isAnonymous": false
+  },
+  "starRating": "FOUR",
+  "createTime": "2026-02-01T08:00:00Z",
+  "updateTime": "2026-02-01T08:00:00Z"
+}

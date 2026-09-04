@@ -1,0 +1,11 @@
+{
+  "name": "accounts/111111111111111111111/locations/22222222222222222222/reviews/rev-anonymous",
+  "reviewId": "rev-anonymous",
+  "reviewer": {
+    "isAnonymous": true
+  },
+  "starRating": "TWO",
+  "comment": "Wait time was long.",
+  "createTime": "2026-02-03T12:00:00Z",
+  "updateTime": "2026-02-03T12:00:00Z"
+}
