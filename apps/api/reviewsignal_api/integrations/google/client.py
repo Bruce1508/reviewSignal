@@ -6,18 +6,12 @@ Synchronous by design: this runs inside an RQ worker, which is sync (`docs/PRD.m
 
 import httpx
 
-from reviewsignal_api.integrations.base import SourceFetchError, SourceNotConnectedError
+from reviewsignal_api.integrations.base import SourceFetchError
+from reviewsignal_api.integrations.google.http import raise_for_status
 
 _BASE_URL = "https://mybusiness.googleapis.com/v4"
 _PAGE_SIZE = 50
 _TIMEOUT = httpx.Timeout(connect=30.0, read=30.0, write=30.0, pool=30.0)
-
-
-def _error_message(response: httpx.Response) -> str:
-    try:
-        return str(response.json()["error"]["message"])
-    except Exception:
-        return response.text[:200]
 
 
 class GoogleReviewsClient:
@@ -48,14 +42,5 @@ class GoogleReviewsClient:
         except httpx.RequestError as exc:
             raise SourceFetchError(f"Google reviews request failed: {exc}") from exc
 
-        if response.status_code in (401, 403):
-            raise SourceNotConnectedError(
-                f"Google credentials rejected ({response.status_code}): {_error_message(response)}"
-            )
-        if response.status_code != 200:
-            raise SourceFetchError(
-                f"Google reviews request failed ({response.status_code}): "
-                f"{_error_message(response)}"
-            )
-
+        raise_for_status(response, "reviews")
         return response.json()
