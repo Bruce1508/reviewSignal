@@ -1,0 +1,11 @@
+{
+  "accounts": [
+    {
+      "name": "accounts/111111111111111111111",
+      "accountName": "Maple Photo Imaging",
+      "type": "PERSONAL",
+      "verificationState": "VERIFIED"
+    }
+  ],
+  "nextPageToken": "opaque-accounts-token-abc"
+}

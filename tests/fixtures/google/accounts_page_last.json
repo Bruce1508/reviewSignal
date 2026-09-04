@@ -1,0 +1,13 @@
+{
+  "accounts": [
+    {
+      "name": "accounts/222222222222222222222",
+      "accountName": "Maple Photo Group",
+      "type": "LOCATION_GROUP"
+    },
+    {
+      "name": "accounts/333333333333333333333",
+      "type": "PERSONAL"
+    }
+  ]
+}

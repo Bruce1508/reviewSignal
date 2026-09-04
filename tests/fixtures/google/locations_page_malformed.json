@@ -1,0 +1,18 @@
+{
+  "locations": [
+    {
+      "name": "locations/66666666666666666666"
+    },
+    {
+      "name": "locations/../../accounts/999/locations/evil",
+      "title": "Path traversal attempt"
+    },
+    {
+      "name": "accounts/111/locations/77777777777777777777",
+      "title": "Wrong resource prefix"
+    },
+    {
+      "title": "No name at all"
+    }
+  ]
+}
