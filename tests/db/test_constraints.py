@@ -1,4 +1,4 @@
-"""The invariants in `docs/data-model.md` §20 must be enforced by PostgreSQL itself.
+"""The invariants in `docs/data-model.md` §21 must be enforced by PostgreSQL itself.
 
 Each test writes directly through the ORM, bypassing every service, so a passing
 test proves the database rejects the row rather than proving Python does.

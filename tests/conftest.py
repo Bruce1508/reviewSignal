@@ -24,6 +24,7 @@ MANAGED_TABLES = (
     "reviews",
     "sync_runs",
     "jobs",
+    "source_credentials",
 )
 
 

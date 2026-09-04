@@ -17,6 +17,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    LargeBinary,
     SmallInteger,
     String,
     Text,
@@ -39,6 +40,7 @@ INSIGHT_STATUSES = ("new", "monitoring", "resolved")
 INSIGHT_ACTION_STATUSES = ("planned", "in_progress", "completed", "cancelled")
 SYNC_RUN_STATUSES = ("running", "success", "failed", "partial")
 JOB_STATUSES = ("queued", "running", "succeeded", "failed", "dead_letter")
+SOURCE_CREDENTIAL_STATUSES = ("connected", "disconnected", "invalid")
 
 
 def _in(column: str, values: tuple[str, ...]) -> str:
@@ -61,7 +63,10 @@ class Review(Base):
     source: Mapped[str] = mapped_column(String(64), nullable=False)
     source_review_id: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     rating: Mapped[int] = mapped_column(SmallInteger, nullable=False)
-    review_text: Mapped[str] = mapped_column(Text, nullable=False)
+    # Nullable: a Google review may carry a star rating with no comment. Storing it
+    # keeps rating and volume trends complete (`docs/PRD.md` §3.1); it is marked
+    # analysis_status='skipped' because there is no text to analyze.
+    review_text: Mapped[str | None] = mapped_column(Text)
     reviewer_name: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
@@ -452,7 +457,11 @@ class EvaluationRun(Base):
 
 
 class Setting(Base):
-    """Non-secret configuration (`data-model.md` §17). Secrets live in the environment."""
+    """Non-secret configuration (`data-model.md` §17).
+
+    Deploy-time secrets live in the environment; runtime-issued OAuth tokens live in
+    `source_credentials`, encrypted. Neither belongs here.
+    """
 
     __tablename__ = "settings"
 
@@ -461,4 +470,45 @@ class Setting(Base):
     value: Mapped[dict] = mapped_column(JSONB, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class SourceCredential(Base):
+    """OAuth credentials for one feedback source, encrypted at rest.
+
+    A refresh token is issued at runtime by the OAuth callback, so it cannot live in an
+    environment variable (set at deploy time) and `data-model.md` §17 bars it from
+    `settings`. It is stored here as ciphertext and never returned by the API
+    (`docs/api-spec.md` §16.5). Keyed by source so a second connector
+    (`data-model.md` §25) needs no schema change.
+    """
+
+    __tablename__ = "source_credentials"
+
+    id: Mapped[uuid.UUID] = _pk()
+    source: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    status: Mapped[str] = mapped_column(
+        String(32), nullable=False, server_default="disconnected"
+    )
+    account_id: Mapped[str | None] = mapped_column(String(255))
+    location_id: Mapped[str | None] = mapped_column(String(255))
+    access_token_encrypted: Mapped[bytes | None] = mapped_column(LargeBinary)
+    refresh_token_encrypted: Mapped[bytes | None] = mapped_column(LargeBinary)
+    token_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    scopes: Mapped[list] = mapped_column(JSONB, nullable=False, server_default="[]")
+    connected_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            _in("status", SOURCE_CREDENTIAL_STATUSES), name="ck_source_credentials_status"
+        ),
+        # A connected source must actually hold a refresh token; anything else is a
+        # half-written connection that /google/status would misreport.
+        CheckConstraint(
+            "status <> 'connected' OR refresh_token_encrypted IS NOT NULL",
+            name="ck_source_credentials_connected_has_token",
+        ),
     )

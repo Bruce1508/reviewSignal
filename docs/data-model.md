@@ -19,7 +19,7 @@ and must remain compatible with [`deployment.md`](deployment.md) and
 - PostgreSQL is the source of truth.
 
 ## 2. Core Entities
-`reviews`, `review_analyses`, `review_aspects`, `taxonomy_versions`, `taxonomy_nodes`, `taxonomy_changes`, `anomalies`, `insights`, `insight_actions`, `sync_runs`, `jobs`, `model_runs`, `evaluation_runs`, `settings`.
+`reviews`, `review_analyses`, `review_aspects`, `taxonomy_versions`, `taxonomy_nodes`, `taxonomy_changes`, `anomalies`, `insights`, `insight_actions`, `sync_runs`, `jobs`, `model_runs`, `evaluation_runs`, `settings`, `source_credentials`.
 
 ## 3. Relationship Overview
 ```mermaid
@@ -42,7 +42,7 @@ id UUID PK
 source VARCHAR
 source_review_id VARCHAR UNIQUE
 rating SMALLINT
-review_text TEXT
+review_text TEXT NULL
 reviewer_name TEXT NULL
 created_at TIMESTAMPTZ
 updated_at TIMESTAMPTZ
@@ -54,6 +54,10 @@ analysis_status VARCHAR
 inserted_at TIMESTAMPTZ
 ```
 Indexes: unique `source_review_id`, plus `created_at`, `rating`, `analysis_status`.
+
+`review_text` is nullable because a source may return a star rating with no comment.
+Such reviews are stored so rating and volume trends stay complete, with
+`analysis_status = 'skipped'` because there is no text to classify.
 
 ## 5. `taxonomy_versions`
 Immutable taxonomy version.
@@ -249,7 +253,27 @@ updated_at TIMESTAMPTZ
 ```
 Store non-secret configuration only. Secrets belong in environment/AWS secret storage.
 
-## 18. Current vs Historical State
+## 18. `source_credentials`
+Per-source OAuth credentials, encrypted at rest.
+```text
+id UUID PK
+source VARCHAR UNIQUE
+status VARCHAR
+account_id VARCHAR NULL
+location_id VARCHAR NULL
+access_token_encrypted BYTEA NULL
+refresh_token_encrypted BYTEA NULL
+token_expires_at TIMESTAMPTZ NULL
+scopes JSONB
+connected_at TIMESTAMPTZ NULL
+updated_at TIMESTAMPTZ
+```
+Statuses: `connected`, `disconnected`, `invalid`. A `connected` row must hold a
+refresh token. Deploy-time secrets stay in the environment (§17); a refresh token is
+issued at runtime by the OAuth callback, so it cannot be one, and ciphertext here is
+never returned by the API.
+
+## 19. Current vs Historical State
 Never destructively overwrite previous AI state:
 ```text
 Review
@@ -259,29 +283,29 @@ Review
 ```
 Current queries use the active taxonomy/current analysis; historical records support audit/rollback.
 
-## 19. Raw vs Normalized Data
+## 20. Raw vs Normalized Data
 Keep `raw_payload` for source fidelity/reprocessing and normalized columns for normal application queries. Do not query Google-specific JSON for dashboard operations.
 
-## 20. Constraints
+## 21. Constraints
 - `rating` between 1 and 5.
 - `confidence` between 0 and 1.
 - one active taxonomy version.
 - unique source review ID.
 - valid sentiment/status enums.
 
-## 21. Transaction Boundaries
+## 22. Transaction Boundaries
 Use transactions when activating a taxonomy version, archiving the previous version, inserting its nodes, and recording changes. Activation must never leave two active versions.
 
-## 22. Common Query Patterns
+## 23. Common Query Patterns
 Optimize for reviews by date/rating/category/sentiment, negative theme frequency, category trends, active insights, taxonomy tree, failed jobs, and latest sync state. Add indexes from measured queries, not speculation.
 
-## 23. Retention
+## 24. Retention
 Retain raw reviews, taxonomy history, previous analyses, model runs, and evaluation runs. Rotate verbose application logs separately.
 
-## 24. Future Extensibility
+## 25. Future Extensibility
 Future feedback sources map into the same normalized model. Do not add multi-tenant/location complexity until required.
 
-## 25. Summary
+## 26. Summary
 ```text
 Review
 → Review Analysis
