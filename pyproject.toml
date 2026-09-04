@@ -1,0 +1,57 @@
+[project]
+name = "reviewsignal"
+version = "0.1.0"
+description = "ReviewSignal AI — internal AI customer intelligence platform"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.6",
+    "sqlalchemy[asyncio]>=2.0.36",
+    "psycopg[binary,pool]>=3.2",
+    "alembic>=1.14",
+    "redis>=5.2",
+    "rq>=2.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "httpx>=0.28",
+    "ruff>=0.8",
+    "pyright>=1.1.390",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["apps/api/reviewsignal_api", "workers/reviewsignal_worker"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["apps/api", "workers", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "TID"]
+
+[tool.ruff.lint.per-file-ignores]
+# Alembic writes these; reformatting them fights the generator on every revision.
+"migrations/versions/*" = ["E501"]
+
+[tool.pyright]
+include = ["apps/api", "workers", "tests"]
+extraPaths = ["apps/api", "workers"]
+typeCheckingMode = "basic"
+pythonVersion = "3.12"
+reportMissingImports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["apps/api", "workers"]
+addopts = "-q"
