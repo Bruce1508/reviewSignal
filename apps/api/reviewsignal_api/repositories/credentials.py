@@ -45,6 +45,20 @@ class CredentialRepository:
         await self._session.flush()
         return credential
 
+    async def set_location(
+        self, source: str, *, account_id: str, location_id: str
+    ) -> SourceCredential | None:
+        """Record which profile to ingest from. Tokens are deliberately untouched."""
+        credential = await self.get(source)
+        if credential is None:
+            return None
+
+        credential.account_id = account_id
+        credential.location_id = location_id
+        credential.updated_at = datetime.now(UTC)
+        await self._session.flush()
+        return credential
+
     async def mark_disconnected(self, source: str) -> None:
         credential = await self.get(source)
         if credential is None:

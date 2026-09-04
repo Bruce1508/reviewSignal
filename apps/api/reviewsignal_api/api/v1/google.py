@@ -1,15 +1,23 @@
 """Google Business Profile connection and job routes (`docs/api-spec.md` §8, §12)."""
 
 import secrets
+from typing import Annotated
 
-from fastapi import APIRouter, Cookie, Response
+from fastapi import APIRouter, Cookie, Query, Response
 from fastapi.responses import RedirectResponse
 from starlette.concurrency import run_in_threadpool
 
 from reviewsignal_api.api.deps import SessionDep, SettingsDep
 from reviewsignal_api.core.errors import ValidationFailedError
 from reviewsignal_api.schemas.envelope import ApiResponse
-from reviewsignal_api.schemas.google import GoogleStatusPayload, JobAcceptedPayload
+from reviewsignal_api.schemas.google import (
+    RESOURCE_ID_PATTERN,
+    GoogleAccountPayload,
+    GoogleLocationPayload,
+    GoogleLocationSelection,
+    GoogleStatusPayload,
+    JobAcceptedPayload,
+)
 from reviewsignal_api.services.google_connection import GoogleConnectionService
 from reviewsignal_worker.queue import enqueue
 
@@ -67,6 +75,36 @@ async def google_callback(
 
     await GoogleConnectionService(session, settings).complete(code)
     return ApiResponse.ok({"connected": True})
+
+
+@router.get("/accounts", response_model=ApiResponse[list[GoogleAccountPayload]])
+async def google_accounts(session: SessionDep, settings: SettingsDep):
+    """List the Google accounts the stored grant can see."""
+    return ApiResponse.ok(await GoogleConnectionService(session, settings).list_accounts())
+
+
+@router.get("/locations", response_model=ApiResponse[list[GoogleLocationPayload]])
+async def google_locations(
+    account_id: Annotated[str, Query(pattern=RESOURCE_ID_PATTERN)],
+    session: SessionDep,
+    settings: SettingsDep,
+):
+    """List the locations under one account, so one can be selected for ingestion."""
+    return ApiResponse.ok(
+        await GoogleConnectionService(session, settings).list_locations(account_id)
+    )
+
+
+@router.post("/location", response_model=ApiResponse[GoogleStatusPayload])
+async def google_select_location(
+    payload: GoogleLocationSelection, session: SessionDep, settings: SettingsDep
+):
+    """Record which profile to ingest from; backfill and sync stay blocked until set."""
+    return ApiResponse.ok(
+        await GoogleConnectionService(session, settings).select_location(
+            payload.account_id, payload.location_id
+        )
+    )
 
 
 @router.post("/disconnect", response_model=ApiResponse[dict[str, bool]])

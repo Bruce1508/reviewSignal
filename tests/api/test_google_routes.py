@@ -9,6 +9,8 @@ from sqlalchemy import text
 
 from reviewsignal_api.core.crypto import encrypt
 from reviewsignal_api.db.models import SourceCredential
+from reviewsignal_api.integrations.base import SourceFetchError, SourceNotConnectedError
+from reviewsignal_api.integrations.google.profile import DiscoveredAccount, DiscoveredLocation
 from reviewsignal_api.services.google_connection import GoogleConnectionService
 from reviewsignal_worker.db import session_scope
 
@@ -206,3 +208,210 @@ async def test_callback_with_a_matching_state_cookie_completes(
     assert response.status_code == 200
     assert response.json()["data"] == {"connected": True}
     assert completed == ["abc"]
+
+
+# --- Account/location selection (`docs/api-spec.md` §8) -----------------------
+
+
+class _StubProfileClient:
+    """Stands in for `GoogleProfileClient`, recording what it was asked for."""
+
+    calls: list[tuple[str, str | None]] = []
+    accounts: list[DiscoveredAccount] = []
+    locations: list[DiscoveredLocation] = []
+    raises: Exception | None = None
+
+    def __init__(self, access_token: str) -> None:
+        self.access_token = access_token
+
+    def __enter__(self) -> "_StubProfileClient":
+        return self
+
+    def __exit__(self, *exc_info: object) -> None:
+        return None
+
+    def list_accounts(self) -> list[DiscoveredAccount]:
+        type(self).calls.append(("accounts", None))
+        failure = type(self).raises
+        if failure is not None:
+            raise failure
+        return type(self).accounts
+
+    def list_locations(self, account_id: str) -> list[DiscoveredLocation]:
+        type(self).calls.append(("locations", account_id))
+        failure = type(self).raises
+        if failure is not None:
+            raise failure
+        return type(self).locations
+
+
+@pytest.fixture
+def stub_profile(monkeypatch: pytest.MonkeyPatch) -> type[_StubProfileClient]:
+    """Replace discovery's HTTP client and token refresh; neither may touch Google."""
+    _StubProfileClient.calls = []
+    _StubProfileClient.accounts = []
+    _StubProfileClient.locations = []
+    _StubProfileClient.raises = None
+    monkeypatch.setattr(
+        "reviewsignal_api.services.google_connection.GoogleProfileClient", _StubProfileClient
+    )
+    monkeypatch.setattr(
+        "reviewsignal_api.services.google_connection._access_token", lambda: "stub-access-token"
+    )
+    return _StubProfileClient
+
+
+async def test_accounts_without_a_credential_is_rejected(client: AsyncClient) -> None:
+    response = await client.get("/api/v1/google/accounts")
+
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "GOOGLE_NOT_CONNECTED"
+
+
+async def test_locations_without_a_credential_is_rejected(client: AsyncClient) -> None:
+    response = await client.get("/api/v1/google/locations?account_id=111")
+
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "GOOGLE_NOT_CONNECTED"
+
+
+async def test_accounts_returns_the_discovered_accounts(
+    client: AsyncClient, stub_profile: type[_StubProfileClient]
+) -> None:
+    _insert_connected_credential()
+    stub_profile.accounts = [DiscoveredAccount(account_id="111", name="Maple Photo Imaging")]
+
+    response = await client.get("/api/v1/google/accounts")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["error"] is None
+    assert body["data"] == [{"account_id": "111", "name": "Maple Photo Imaging"}]
+
+
+async def test_locations_are_fetched_for_the_requested_account(
+    client: AsyncClient, stub_profile: type[_StubProfileClient]
+) -> None:
+    _insert_connected_credential()
+    stub_profile.locations = [DiscoveredLocation(location_id="222", title="Downtown")]
+
+    response = await client.get("/api/v1/google/locations?account_id=111")
+
+    assert response.status_code == 200
+    assert response.json()["data"] == [{"location_id": "222", "title": "Downtown"}]
+    assert stub_profile.calls == [("locations", "111")]
+
+
+async def test_locations_without_an_account_id_is_rejected(client: AsyncClient) -> None:
+    _insert_connected_credential()
+
+    response = await client.get("/api/v1/google/locations")
+
+    assert response.status_code == 400
+    assert response.json()["error"]["code"] == "VALIDATION_ERROR"
+
+
+async def test_locations_reject_an_account_id_that_is_not_a_single_path_segment(
+    client: AsyncClient, stub_profile: type[_StubProfileClient]
+) -> None:
+    """The id is interpolated into a Google URL, so a traversal attempt must not reach it."""
+    _insert_connected_credential()
+
+    response = await client.get("/api/v1/google/locations?account_id=../../evil")
+
+    assert response.status_code == 400
+    assert response.json()["error"]["code"] == "VALIDATION_ERROR"
+    assert stub_profile.calls == [], "a rejected id still reached the Google client"
+
+
+async def test_rejected_credentials_during_discovery_report_not_connected(
+    client: AsyncClient, stub_profile: type[_StubProfileClient]
+) -> None:
+    _insert_connected_credential()
+    stub_profile.raises = SourceNotConnectedError("Google credentials rejected (401)")
+
+    response = await client.get("/api/v1/google/accounts")
+
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "GOOGLE_NOT_CONNECTED"
+
+
+async def test_a_google_outage_during_discovery_is_reported_as_an_api_error(
+    client: AsyncClient, stub_profile: type[_StubProfileClient]
+) -> None:
+    """Not a 500: the failure is upstream and the operator can retry it."""
+    _insert_connected_credential()
+    stub_profile.raises = SourceFetchError("Google accounts request failed (503)")
+
+    response = await client.get("/api/v1/google/accounts")
+
+    assert response.status_code == 502
+    assert response.json()["error"]["code"] == "GOOGLE_API_ERROR"
+
+
+async def test_selecting_a_location_persists_it_and_reports_it_back(client: AsyncClient) -> None:
+    _insert_connected_credential()
+
+    response = await client.post(
+        "/api/v1/google/location", json={"account_id": "111", "location_id": "222"}
+    )
+
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert data["account_id"] == "111"
+    assert data["location_id"] == "222"
+    assert data["connected"] is True
+
+    with session_scope() as session:
+        row = session.execute(
+            text("SELECT account_id, location_id, status FROM source_credentials")
+        ).one()
+    assert (row.account_id, row.location_id, row.status) == ("111", "222", "connected")
+
+
+async def test_selecting_a_location_keeps_the_stored_tokens(client: AsyncClient) -> None:
+    """Selection must not disturb the grant; re-authorizing to change location is wrong."""
+    ciphertext = _insert_connected_credential()
+
+    await client.post(
+        "/api/v1/google/location", json={"account_id": "111", "location_id": "222"}
+    )
+
+    with session_scope() as session:
+        row = session.execute(
+            text("SELECT refresh_token_encrypted FROM source_credentials")
+        ).one()
+    assert bytes(row.refresh_token_encrypted) == ciphertext
+
+
+async def test_selecting_a_location_without_a_credential_is_rejected(client: AsyncClient) -> None:
+    response = await client.post(
+        "/api/v1/google/location", json={"account_id": "111", "location_id": "222"}
+    )
+
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "GOOGLE_NOT_CONNECTED"
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"account_id": "../../evil", "location_id": "222"},
+        {"account_id": "111", "location_id": "accounts/1/locations/2"},
+        {"account_id": "", "location_id": "222"},
+        {"account_id": "111"},
+    ],
+)
+async def test_selection_rejects_ids_that_are_not_single_path_segments(
+    client: AsyncClient, payload: dict
+) -> None:
+    _insert_connected_credential()
+
+    response = await client.post("/api/v1/google/location", json=payload)
+
+    assert response.status_code == 400
+    assert response.json()["error"]["code"] == "VALIDATION_ERROR"
+
+    with session_scope() as session:
+        row = session.execute(text("SELECT account_id, location_id FROM source_credentials")).one()
+    assert (row.account_id, row.location_id) == (None, None)

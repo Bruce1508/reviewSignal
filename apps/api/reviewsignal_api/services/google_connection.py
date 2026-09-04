@@ -1,26 +1,80 @@
-"""Google OAuth connection lifecycle (`docs/api-spec.md` §8).
+"""Google connection lifecycle (`docs/api-spec.md` §8).
 
-Account/location discovery is out of scope here — `account_id`/`location_id` are
-persisted as whatever the token response carries (currently nothing), and a later
-step wires them up.
+Connecting is two steps, not one: OAuth grants access to a *user*, but reviews are
+fetched per location, so the callback cannot know which profile to ingest. `complete`
+stores the grant and `select_location` records the choice made from `list_accounts` /
+`list_locations`. Until both ids are set, `jobs/ingest.py` refuses to run.
+
+Discovery is synchronous under the hood so it reuses the worker's token refresh
+unchanged; it is called through a threadpool to keep the event loop free.
 """
 
+from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from urllib.parse import urlencode
 
 import httpx
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.concurrency import run_in_threadpool
 
 from reviewsignal_api.core.config import Settings
 from reviewsignal_api.core.crypto import encrypt
 from reviewsignal_api.core.errors import GoogleApiError, GoogleNotConnectedError
+from reviewsignal_api.integrations.base import SourceFetchError, SourceNotConnectedError
+from reviewsignal_api.integrations.google.profile import (
+    DiscoveredAccount,
+    DiscoveredLocation,
+    GoogleProfileClient,
+)
 from reviewsignal_api.repositories.credentials import CredentialRepository
 from reviewsignal_api.repositories.system import SystemRepository
-from reviewsignal_api.schemas.google import GoogleStatusPayload
+from reviewsignal_api.schemas.google import (
+    GoogleAccountPayload,
+    GoogleLocationPayload,
+    GoogleStatusPayload,
+)
+from reviewsignal_api.services.google_token import load_credential, resolve_access_token
+from reviewsignal_worker.db import session_scope
 
 AUTHORIZATION_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 TOKEN_URL = "https://oauth2.googleapis.com/token"
 SCOPE = "https://www.googleapis.com/auth/business.manage"
+
+
+def _access_token() -> str:
+    """Resolve a usable access token, refreshing it if needed.
+
+    The session closes before the caller makes its network call, so a slow Google
+    request never holds a database connection open.
+    """
+    with session_scope() as session:
+        source = GoogleConnectionService.SOURCE
+        return resolve_access_token(session, load_credential(session, source))
+
+
+def _fetch_accounts() -> list[DiscoveredAccount]:
+    with GoogleProfileClient(_access_token()) as profile:
+        return profile.list_accounts()
+
+
+def _fetch_locations(account_id: str) -> list[DiscoveredLocation]:
+    with GoogleProfileClient(_access_token()) as profile:
+        return profile.list_locations(account_id)
+
+
+async def _discover[T](fetch: Callable[[], T]) -> T:
+    """Run a blocking discovery call off the event loop, in documented error terms.
+
+    The integration layer speaks `SourceFetchError` / `SourceNotConnectedError`; only
+    `DomainError` subclasses reach a documented API error code (`docs/api-spec.md` §14),
+    so an untranslated one would surface as an opaque 500.
+    """
+    try:
+        return await run_in_threadpool(fetch)
+    except SourceNotConnectedError as exc:
+        raise GoogleNotConnectedError(str(exc)) from exc
+    except SourceFetchError as exc:
+        raise GoogleApiError(str(exc)) from exc
 
 
 class GoogleConnectionService:
@@ -120,6 +174,38 @@ class GoogleConnectionService:
             scopes=scopes,
         )
         await self._session.commit()
+
+    async def list_accounts(self) -> list[GoogleAccountPayload]:
+        """Accounts the stored grant can see (`docs/api-spec.md` §8)."""
+        await self.ensure_connected()
+        accounts = await _discover(_fetch_accounts)
+        return [
+            GoogleAccountPayload(account_id=account.account_id, name=account.name)
+            for account in accounts
+        ]
+
+    async def list_locations(self, account_id: str) -> list[GoogleLocationPayload]:
+        """Locations under one account (`docs/api-spec.md` §8)."""
+        await self.ensure_connected()
+        locations = await _discover(lambda: _fetch_locations(account_id))
+        return [
+            GoogleLocationPayload(location_id=location.location_id, title=location.title)
+            for location in locations
+        ]
+
+    async def select_location(self, account_id: str, location_id: str) -> GoogleStatusPayload:
+        """Record which profile to ingest from, unblocking backfill and sync.
+
+        The pair is stored as given rather than re-verified against Google: the ids come
+        from a list this same grant just produced, and a stale one fails loudly on the
+        first fetch instead of silently ingesting the wrong location.
+        """
+        await self.ensure_connected()
+        await self._credentials.set_location(
+            self.SOURCE, account_id=account_id, location_id=location_id
+        )
+        await self._session.commit()
+        return await self.status()
 
     async def disconnect(self) -> None:
         await self._credentials.mark_disconnected(self.SOURCE)

@@ -129,6 +129,22 @@ Starts OAuth.
 ### `GET /google/callback`
 OAuth callback.
 
+### `GET /google/accounts`
+Lists the Google accounts the stored grant can see: `account_id`, `name`.
+
+### `GET /google/locations`
+Query: `account_id` (required). Lists that account's locations: `location_id`, `title`.
+
+### `POST /google/location`
+Selects the profile to ingest from and returns the updated connection state.
+```json
+{"account_id":"111111111111111111111","location_id":"222222222222222222222"}
+```
+OAuth grants access to a user, but reviews are fetched per location, so connecting is
+two steps. `POST /google/backfill` and `POST /google/sync` queue jobs that fail until
+a location is selected. Both ids must match `^[A-Za-z0-9_-]{1,128}$`; they become path
+segments in the upstream request.
+
 ### `POST /google/disconnect`
 Disconnects integration.
 
