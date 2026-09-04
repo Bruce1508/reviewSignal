@@ -3,12 +3,11 @@
 **Scope:** Core PostgreSQL entities and relationships.
 
 ## Documentation links
-Read [`README.md`](README.md) for hierarchy and conflict rules. Product intent is
-owned by [`PRD.md`](PRD.md); the system boundary is defined in
-[`architecture.md`](architecture.md). This model stores outputs from
-[`ai-pipeline.md`](ai-pipeline.md), supports contracts in [`api-spec.md`](api-spec.md),
-and must remain compatible with [`deployment.md`](deployment.md) and
-[`evaluation.md`](evaluation.md).
+Read [`README.md`](README.md) for hierarchy and conflict rules. Product intent is owned
+by [`PRD.md`](PRD.md); the system boundary by [`architecture.md`](architecture.md). This
+model stores outputs from [`ai-pipeline.md`](ai-pipeline.md), supports contracts in
+[`api-spec.md`](api-spec.md), and stays compatible with
+[`deployment.md`](deployment.md) and [`evaluation.md`](evaluation.md).
 
 ## 1. Principles
 - Preserve raw Google data.
@@ -55,9 +54,9 @@ inserted_at TIMESTAMPTZ
 ```
 Indexes: unique `source_review_id`, plus `created_at`, `rating`, `analysis_status`.
 
-`review_text` is nullable because a source may return a star rating with no comment.
-Such reviews are stored so rating and volume trends stay complete, with
-`analysis_status = 'skipped'` because there is no text to classify.
+`review_text` is nullable: a source may return a star rating with no comment. Such
+reviews are stored so rating and volume trends stay complete, with
+`analysis_status = 'skipped'` because there is nothing to classify.
 
 ## 5. `taxonomy_versions`
 Immutable taxonomy version.
@@ -274,14 +273,9 @@ issued at runtime by the OAuth callback, so it cannot be one, and ciphertext her
 never returned by the API.
 
 ## 19. Current vs Historical State
-Never destructively overwrite previous AI state:
-```text
-Review
-├─ Analysis v1 → taxonomy v1
-├─ Analysis v2 → taxonomy v2
-└─ Analysis v3 → taxonomy v3 ← current
-```
-Current queries use the active taxonomy/current analysis; historical records support audit/rollback.
+Never destructively overwrite previous AI state. A review accumulates analyses, each
+pinned to the taxonomy version that produced it. Current queries use the active
+taxonomy and current analysis; the superseded rows support audit and rollback.
 
 ## 20. Raw vs Normalized Data
 Keep `raw_payload` for source fidelity/reprocessing and normalized columns for normal application queries. Do not query Google-specific JSON for dashboard operations.
@@ -304,15 +298,3 @@ Retain raw reviews, taxonomy history, previous analyses, model runs, and evaluat
 
 ## 25. Future Extensibility
 Future feedback sources map into the same normalized model. Do not add multi-tenant/location complexity until required.
-
-## 26. Summary
-```text
-Review
-→ Review Analysis
-→ Review Aspects
-→ Taxonomy Nodes
-→ Analytics / Anomalies
-→ Insights
-→ Actions
-```
-Versioning around taxonomy and model outputs makes reclassification and auditability safe.
