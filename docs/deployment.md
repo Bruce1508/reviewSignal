@@ -87,6 +87,7 @@ OLLAMA_BASE_URL
 OLLAMA_MODEL
 EMBEDDING_MODEL
 SESSION_SECRET
+CREDENTIAL_ENCRYPTION_KEY
 ```
 Never expose server secrets to the Next.js client bundle.
 
@@ -168,7 +169,9 @@ Test restore procedures periodically.
 ```text
 Settings → Connect Google → OAuth → callback → protected token storage
 ```
-Only backend handles OAuth secrets.
+Only backend handles OAuth secrets. Tokens are encrypted with
+`CREDENTIAL_ENCRYPTION_KEY` and stored in `source_credentials`
+([`data-model.md`](data-model.md) §18); the key itself stays in the environment.
 
 ## 26. Security Groups
 EC2: allow 80/443 from Internet; SSH only from trusted IP if used.  

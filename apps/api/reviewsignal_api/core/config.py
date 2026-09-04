@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     embedding_model: str = "BAAI/bge-small-en-v1.5"
 
     session_secret: str
+    # Fernet key for OAuth tokens at rest (`docs/data-model.md` §17).
+    credential_encryption_key: str = ""
 
 
 @lru_cache
