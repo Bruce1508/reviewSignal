@@ -204,7 +204,9 @@ Use Pydantic at the API boundary.
 `VALIDATION_ERROR`, `RESOURCE_NOT_FOUND`, `CONFLICT`, `GOOGLE_NOT_CONNECTED`, `GOOGLE_API_ERROR`, `JOB_NOT_RETRYABLE`, `TAXONOMY_VERSION_CONFLICT`, `MODEL_UNAVAILABLE`, `INTERNAL_ERROR`.
 
 ## 15. Authentication
-MVP is single-user/internal: protected admin session, secure cookie, no public signup, no role system. Exact mechanism is finalized during implementation.
+MVP is single-user/internal: protected admin session, secure cookie, no public signup, no role system.
+
+Mechanism: a single operator password, supplied by environment variable, is exchanged at `POST /auth/login` for a signed session cookie. A dependency guards every route under `/api/v1` except `/health`, which stays open for container health checks. The dashboard and the API are served from different origins, so the cookie requires CORS credentials and an explicit `SameSite` policy rather than framework defaults.
 
 ## 16. Design Rules
 1. Keep business logic out of route handlers.
