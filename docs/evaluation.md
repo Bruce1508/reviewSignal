@@ -15,9 +15,11 @@ Do not accept `"the output looks good"` as validation. Taxonomy, classification,
 
 ## 2. Human Benchmark
 Create an initial manually reviewed benchmark of about 100 reviews. For each review label relevant taxonomy aspects and sentiment per aspect.
+Benchmark files live at `data/benchmarks/<dataset_version>.json`, not in PostgreSQL: `data-model.md` §16 refers to a dataset by version string and defines no benchmark entity. An item may carry no aspects; rating-only reviews are valid ground truth.
 
 ## 3. Benchmark Versioning
 Store dataset version, taxonomy version, labeling date, labeler, and notes. Never silently rewrite ground truth; create a new version.
+A new version means a new file. Loading validates rather than coerces, so a malformed file fails the run instead of shrinking it.
 
 ## 4. Train vs Evaluation Data
 Once enough labeled data exists, separate training, validation, and held-out benchmark data. With small data, use cross-validation carefully and document limitations.
@@ -35,6 +37,7 @@ Track precision, recall, and F1 per category to reveal weak categories or poor t
 
 ## 7. Sentiment Evaluation
 Use accuracy, Macro F1, and confusion matrix for aspect-level sentiment. Inspect mixed-sentiment, neutral-vs-positive, and subtle complaint errors.
+Score sentiment only on categories present in both gold and prediction. A missed category is already counted by §5; scoring it again as a sentiment error would conflate finding an aspect with reading its tone. Macro F1 averages only sentiments the benchmark contains, while the confusion matrix always spans the full `data-model.md` §9 vocabulary so an absent label stays visible.
 
 ## 8. Evidence Quality
 Manual rubric:
@@ -47,6 +50,7 @@ Evidence quality directly affects trust and reviewability.
 
 ## 9. Confidence Calibration
 Because confidence controls LLM fallback, evaluate with Brier Score, Expected Calibration Error, and reliability curves.
+Confidence belongs to a whole aspect, so a prediction counts as correct only when its category and its sentiment are both right. Empty reliability buckets are reported rather than dropped: a gap in the curve is a finding.
 
 ## 10. Routing Evaluation
 Measure ML acceptance rate, LLM fallback rate, accuracy of accepted ML predictions, and final accuracy after fallback.
@@ -124,6 +128,7 @@ Possible indicators: falling classifier confidence, rising fallback rate, more u
 
 ## 30. Evaluation Run Record
 Store evaluation type, dataset version, taxonomy version, model version, prompt version, metrics, timestamp, and notes.
+A metric family the run could not measure is stored as null, never as zero: zero is a measurement and would pollute a baseline comparison under §23.
 
 ## 31. Manual Review Loop
 Future UI:
@@ -156,6 +161,8 @@ Only report real measured values.
 - [`data-model.md`](data-model.md): `evaluation_runs`, `model_runs`, and version references.
 - [`api-spec.md`](api-spec.md): evaluation run and history endpoints.
 - [`deployment.md`](deployment.md): production quality signals and operational constraints.
+
+Implementation: `reviewsignal_api.ai.evaluation` (metrics, dataset loader, runner) with persistence in `repositories/evaluation_runs.py`. The runner scores anything satisfying its `Predictor` protocol, so the harness exists before the classifier it measures (PRD §10 puts them in different phases).
 
 ## 35. Summary
 ```text
