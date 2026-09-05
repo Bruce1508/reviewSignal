@@ -127,6 +127,26 @@ def test_a_boundary_confidence_belongs_to_the_bucket_it_opens() -> None:
     assert buckets[1].count == 1
 
 
+def test_a_boundary_confidence_holds_for_a_bucket_count_that_is_not_exact() -> None:
+    """`int(6 / 47 * 47)` truncates to 5.999..., filing a boundary one bucket low."""
+    confidence = 6 / 47
+    result = calibration_metrics([confidence], [True], bucket_count=47)
+    filled = [index for index, bucket in enumerate(result.buckets) if bucket.count]
+    assert filled == [6]
+
+
+def test_every_boundary_confidence_lands_in_the_bucket_it_opens() -> None:
+    """A bucket must contain the confidences its own reported bounds claim."""
+    for bucket_count in range(2, 64):
+        for opened in range(bucket_count):
+            confidence = opened / bucket_count
+            result = calibration_metrics([confidence], [True], bucket_count=bucket_count)
+            filled = [index for index, bucket in enumerate(result.buckets) if bucket.count]
+            assert filled == [opened], f"{confidence!r} with {bucket_count} buckets"
+            bucket = result.buckets[opened]
+            assert bucket.lower <= confidence < bucket.upper
+
+
 # --- Rule 5: invalid input is a bug, not a score ---------------------------
 
 

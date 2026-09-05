@@ -7,6 +7,7 @@ Scored per prediction as `(confidence, was_correct)`, which keeps the metric
 independent of whether the prediction was a category or a sentiment.
 """
 
+from bisect import bisect_right
 from collections.abc import Sequence
 from dataclasses import dataclass
 
@@ -46,6 +47,7 @@ def calibration_metrics(
         if not 0.0 <= confidence <= 1.0:
             raise ValueError(f"confidence out of range: {confidence!r}")
 
+    edges = [index / bucket_count for index in range(bucket_count + 1)]
     counts = [0] * bucket_count
     confidence_sums = [0.0] * bucket_count
     correct_counts = [0] * bucket_count
@@ -53,8 +55,10 @@ def calibration_metrics(
 
     for confidence, was_correct in zip(confidences, correct, strict=True):
         squared_error += (confidence - float(was_correct)) ** 2
+        # Assigned against the same edges the buckets report, so a confidence sitting
+        # exactly on a boundary cannot be filed one bucket low by float truncation.
         # A confidence of exactly 1.0 belongs to the last bucket, not past its end.
-        index = min(int(confidence * bucket_count), bucket_count - 1)
+        index = min(bisect_right(edges, confidence) - 1, bucket_count - 1)
         counts[index] += 1
         confidence_sums[index] += confidence
         correct_counts[index] += int(was_correct)
@@ -69,8 +73,8 @@ def calibration_metrics(
         accuracy = correct_counts[index] / count if count else 0.0
         buckets.append(
             ReliabilityBucket(
-                lower=index / bucket_count,
-                upper=(index + 1) / bucket_count,
+                lower=edges[index],
+                upper=edges[index + 1],
                 count=count,
                 mean_confidence=mean_confidence,
                 accuracy=accuracy,
