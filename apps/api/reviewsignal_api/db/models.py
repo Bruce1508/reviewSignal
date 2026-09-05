@@ -147,7 +147,7 @@ class TaxonomyVersion(Base):
         CheckConstraint(
             _in("status", TAXONOMY_VERSION_STATUSES), name="ck_taxonomy_versions_status"
         ),
-        # `data-model.md` §5/§20: at most one active version, enforced by the database.
+        # `data-model.md` §5/§21: at most one active version, enforced by the database.
         Index(
             "uq_taxonomy_versions_single_active",
             "status",
