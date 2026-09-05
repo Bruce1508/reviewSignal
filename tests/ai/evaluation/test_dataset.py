@@ -146,3 +146,26 @@ def test_missing_version_metadata_is_rejected(tmp_path: Path) -> None:
 def test_a_missing_file_raises_rather_than_returning_an_empty_dataset(tmp_path: Path) -> None:
     with pytest.raises(FileNotFoundError):
         load_benchmark(tmp_path / "absent.json")
+
+
+def test_an_unrecognised_field_on_an_item_is_rejected(tmp_path: Path) -> None:
+    """A typo'd `aspects` key must not read as a legitimate rating-only review."""
+    payload = json.loads(json.dumps(VALID))
+    item = payload["items"][0]
+    item["apsects"] = item.pop("aspects")
+    with pytest.raises(ValueError, match="apsects"):
+        load_benchmark(write(tmp_path, payload))
+
+
+def test_an_unrecognised_field_on_an_aspect_is_rejected(tmp_path: Path) -> None:
+    payload = json.loads(json.dumps(VALID))
+    payload["items"][0]["aspects"][0]["sentimnet"] = "positive"
+    with pytest.raises(ValueError, match="sentimnet"):
+        load_benchmark(write(tmp_path, payload))
+
+
+def test_an_unrecognised_field_on_the_dataset_is_rejected(tmp_path: Path) -> None:
+    payload = json.loads(json.dumps(VALID))
+    payload["dataset_vresion"] = "v-typo"
+    with pytest.raises(ValueError, match="dataset_vresion"):
+        load_benchmark(write(tmp_path, payload))

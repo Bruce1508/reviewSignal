@@ -20,7 +20,7 @@ from reviewsignal_api.db.models import SENTIMENTS
 class GoldAspect(BaseModel):
     """One human-assigned aspect label and its sentiment."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, extra="forbid")
 
     category_id: str
     sentiment: str
@@ -36,7 +36,7 @@ class GoldAspect(BaseModel):
 class BenchmarkItem(BaseModel):
     """One labelled review. An empty `aspects` is valid: rating-only reviews exist."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, extra="forbid")
 
     review_id: str
     text: str
@@ -59,7 +59,7 @@ class BenchmarkItem(BaseModel):
 
 
 class BenchmarkDataset(BaseModel):
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, extra="forbid")
 
     dataset_version: str
     labeled_at: date
