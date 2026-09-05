@@ -1,0 +1,69 @@
+{
+  "dataset_version": "v0-synthetic",
+  "taxonomy_version": null,
+  "labeled_at": "2026-09-05",
+  "labeler": "synthetic-fixture",
+  "notes": "SYNTHETIC placeholder, not real Maple Photo reviews and not a measured benchmark. Its only purpose is to prove the evaluation harness runs end to end before Google Business Profile access is granted. Category ids are placeholders: the real taxonomy is discovered from the corpus and does not exist yet. No metric produced from this file may be reported as a result.",
+  "items": [
+    {
+      "review_id": "syn-001",
+      "text": "Waited far longer than the quoted time, but the prints themselves came out sharp.",
+      "aspects": [
+        {"category_id": "wait_time", "sentiment": "negative"},
+        {"category_id": "photo_quality", "sentiment": "positive"}
+      ]
+    },
+    {
+      "review_id": "syn-002",
+      "text": "Colours came out exactly as expected and the person at the counter was patient with my questions.",
+      "aspects": [
+        {"category_id": "photo_quality", "sentiment": "positive"},
+        {"category_id": "staff_service", "sentiment": "positive"}
+      ]
+    },
+    {
+      "review_id": "syn-003",
+      "text": "Charged noticeably more than the shop down the street for the same size.",
+      "aspects": [
+        {"category_id": "pricing", "sentiment": "negative"}
+      ]
+    },
+    {
+      "review_id": "syn-004",
+      "text": "Fine.",
+      "aspects": []
+    },
+    {
+      "review_id": "syn-005",
+      "text": "Turnaround was about what I expected. Booking a slot online was straightforward.",
+      "aspects": [
+        {"category_id": "wait_time", "sentiment": "neutral"},
+        {"category_id": "booking", "sentiment": "positive"}
+      ]
+    },
+    {
+      "review_id": "syn-006",
+      "text": "Nobody acknowledged me for several minutes even though the shop was empty.",
+      "aspects": [
+        {"category_id": "staff_service", "sentiment": "negative"}
+      ]
+    },
+    {
+      "review_id": "syn-007",
+      "text": "Prints were acceptable and the price was about average for the area.",
+      "aspects": [
+        {"category_id": "photo_quality", "sentiment": "neutral"},
+        {"category_id": "pricing", "sentiment": "neutral"}
+      ]
+    },
+    {
+      "review_id": "syn-008",
+      "text": "Ready much later than promised and the booking system double-listed my slot, though the staff sorted it out kindly.",
+      "aspects": [
+        {"category_id": "wait_time", "sentiment": "negative"},
+        {"category_id": "booking", "sentiment": "negative"},
+        {"category_id": "staff_service", "sentiment": "positive"}
+      ]
+    }
+  ]
+}
