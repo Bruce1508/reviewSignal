@@ -33,8 +33,7 @@ def classification_metrics(
         raise ValueError("cannot evaluate an empty benchmark")
 
     labels = sorted(
-        {label for item in gold for label in item}
-        | {label for item in predicted for label in item}
+        {label for item in gold for label in item} | {label for item in predicted for label in item}
     )
 
     per_category: dict[str, Score] = {}
