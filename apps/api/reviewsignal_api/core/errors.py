@@ -9,6 +9,7 @@ from enum import StrEnum
 
 class ErrorCode(StrEnum):
     VALIDATION_ERROR = "VALIDATION_ERROR"
+    UNAUTHORIZED = "UNAUTHORIZED"
     RESOURCE_NOT_FOUND = "RESOURCE_NOT_FOUND"
     CONFLICT = "CONFLICT"
     GOOGLE_NOT_CONNECTED = "GOOGLE_NOT_CONNECTED"
@@ -33,6 +34,11 @@ class DomainError(Exception):
 class ValidationFailedError(DomainError):
     code = ErrorCode.VALIDATION_ERROR
     status_code = 400
+
+
+class UnauthorizedError(DomainError):
+    code = ErrorCode.UNAUTHORIZED
+    status_code = 401
 
 
 class ResourceNotFoundError(DomainError):

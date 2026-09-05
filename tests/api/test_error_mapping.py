@@ -15,6 +15,7 @@ from reviewsignal_api.core.errors import (
     ModelUnavailableError,
     ResourceNotFoundError,
     TaxonomyVersionConflictError,
+    UnauthorizedError,
     ValidationFailedError,
 )
 from reviewsignal_api.main import create_app
@@ -27,6 +28,7 @@ CASES = [
     (GoogleApiError, ErrorCode.GOOGLE_API_ERROR, 502),
     (JobNotRetryableError, ErrorCode.JOB_NOT_RETRYABLE, 409),
     (TaxonomyVersionConflictError, ErrorCode.TAXONOMY_VERSION_CONFLICT, 409),
+    (UnauthorizedError, ErrorCode.UNAUTHORIZED, 401),
     (ModelUnavailableError, ErrorCode.MODEL_UNAVAILABLE, 503),
     (InternalError, ErrorCode.INTERNAL_ERROR, 500),
 ]

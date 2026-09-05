@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     embedding_model: str = "BAAI/bge-small-en-v1.5"
 
     session_secret: str
+    # Operator password for the admin session (`docs/api-spec.md` §15).
+    # Unset means nobody can log in, which locks the API rather than opening it.
+    operator_password: str = ""
     # Fernet key for OAuth tokens at rest (`docs/data-model.md` §17).
     credential_encryption_key: str = ""
 

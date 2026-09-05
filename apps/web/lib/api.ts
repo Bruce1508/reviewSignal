@@ -3,6 +3,7 @@
 
 export type ErrorCode =
   | "VALIDATION_ERROR"
+  | "UNAUTHORIZED"
   | "RESOURCE_NOT_FOUND"
   | "CONFLICT"
   | "GOOGLE_NOT_CONNECTED"

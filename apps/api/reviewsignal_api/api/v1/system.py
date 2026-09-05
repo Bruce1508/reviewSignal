@@ -9,10 +9,11 @@ from reviewsignal_api.schemas.system import HealthPayload, SystemStatusPayload
 from reviewsignal_api.services.health import HealthService
 from reviewsignal_api.services.system import SystemService
 
+public_router = APIRouter(tags=["system"])
 router = APIRouter(tags=["system"])
 
 
-@router.get("/health", response_model=ApiResponse[HealthPayload])
+@public_router.get("/health", response_model=ApiResponse[HealthPayload])
 async def health(session: SessionDep, redis: RedisDep, response: Response):
     """Report API, database, and Redis health.
 

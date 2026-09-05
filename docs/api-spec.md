@@ -201,12 +201,14 @@ Frontend polls `GET /jobs/{job_id}`. MVP does not require WebSockets.
 Use Pydantic at the API boundary.
 
 ## 14. Error Codes
-`VALIDATION_ERROR`, `RESOURCE_NOT_FOUND`, `CONFLICT`, `GOOGLE_NOT_CONNECTED`, `GOOGLE_API_ERROR`, `JOB_NOT_RETRYABLE`, `TAXONOMY_VERSION_CONFLICT`, `MODEL_UNAVAILABLE`, `INTERNAL_ERROR`.
+`VALIDATION_ERROR`, `UNAUTHORIZED`, `RESOURCE_NOT_FOUND`, `CONFLICT`, `GOOGLE_NOT_CONNECTED`, `GOOGLE_API_ERROR`, `JOB_NOT_RETRYABLE`, `TAXONOMY_VERSION_CONFLICT`, `MODEL_UNAVAILABLE`, `INTERNAL_ERROR`.
 
 ## 15. Authentication
 MVP is single-user/internal: protected admin session, secure cookie, no public signup, no role system.
 
-Mechanism: a single operator password, supplied by environment variable, is exchanged at `POST /auth/login` for a signed session cookie. A dependency guards every route under `/api/v1` except `/health`, which stays open for container health checks. The dashboard and the API are served from different origins, so the cookie requires CORS credentials and an explicit `SameSite` policy rather than framework defaults.
+Mechanism: a single operator password, supplied by environment variable, is exchanged at `POST /auth/login` for a signed session cookie. A dependency guards every route under `/api/v1` except `/health`, which stays open for container health checks. `POST /auth/login` takes `{ "password": string }` and sets the `rs_session` cookie; `POST /auth/logout` clears it and is itself unguarded, so an expired session can always be dropped. The cookie is `HttpOnly`, `SameSite=lax`, `Secure` outside local, and lapses after 12 hours. Sessions are stateless, so rotating `SESSION_SECRET` is the revocation mechanism and invalidates all of them at once.
+
+CORS is not configured: the dashboard has no browser-side calls yet. Adding one requires credentialed CORS and a `SameSite` review, because the dashboard and the API are served from different origins.
 
 ## 16. Design Rules
 1. Keep business logic out of route handlers.
