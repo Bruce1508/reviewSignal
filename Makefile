@@ -38,6 +38,7 @@ web: ## Run the Next.js dev server
 
 lint: ## Lint Python and web
 	uv run ruff check .
+	uv run ruff format --check .
 	uv run python -m tools.check_citations
 	cd $(WEB) && npm run lint
 
