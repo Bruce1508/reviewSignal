@@ -228,3 +228,14 @@ async def test_queueing_a_run_with_a_registered_predictor_is_accepted(
     }
     assert captured["job_type"] == "evaluation_run"
     assert captured["payload"] == {"evaluation_type": "classification"}
+
+
+async def test_an_unknown_workflow_is_a_validation_error_not_a_model_outage(
+    client: AsyncClient,
+) -> None:
+    """`api-spec.md` §10 limits `evaluation_type` to the workflows `data-model.md` §16
+    names. 503 would tell the caller to retry something that can never succeed."""
+    response = await client.post("/api/v1/evaluation/run", json={"evaluation_type": "banana"})
+
+    assert response.status_code == 400
+    assert response.json()["error"]["code"] == "VALIDATION_ERROR"

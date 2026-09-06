@@ -7,11 +7,14 @@ summary instead of restating it.
 
 import uuid
 from datetime import datetime
+from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
-# Matches `evaluation_runs.evaluation_type` in `db/models.py`.
-EVALUATION_TYPE_MAX_LENGTH = 64
+# The workflows `data-model.md` §16 names for `evaluation_type`. An unknown string is
+# a request the caller got wrong, not a model that happens to be down, so it is
+# rejected here rather than reaching the registry.
+EvaluationWorkflow = Literal["classification", "taxonomy", "anomaly", "recommendation"]
 
 
 class EvaluationRunSummary(BaseModel):
@@ -39,4 +42,4 @@ class EvaluationRunDetail(EvaluationRunSummary):
 class EvaluationRunRequest(BaseModel):
     """`evaluation_type` names the workflow to evaluate, not a metric family."""
 
-    evaluation_type: str = Field(min_length=1, max_length=EVALUATION_TYPE_MAX_LENGTH)
+    evaluation_type: EvaluationWorkflow
