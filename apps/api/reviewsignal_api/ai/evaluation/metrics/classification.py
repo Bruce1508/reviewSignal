@@ -17,7 +17,7 @@ class ClassificationMetrics:
     per_category: dict[str, Score]
     item_count: int
     # How many labels `macro` averaged over. It varies with what the model predicted,
-    # so a §23 regression comparison must check it before comparing two macro scores.
+    # so an `evaluation.md` §23 regression comparison must check it before comparing.
     label_count: int
 
 

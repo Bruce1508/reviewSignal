@@ -3,7 +3,7 @@
 
 WEB := apps/web
 
-.PHONY: help install up down logs migrate revision api worker web check lint typecheck test test-py test-web
+.PHONY: help install up down logs migrate revision api worker web check lint citations typecheck test test-py test-web
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  %-12s %s\n", $$1, $$2}'
@@ -38,7 +38,11 @@ web: ## Run the Next.js dev server
 
 lint: ## Lint Python and web
 	uv run ruff check .
+	uv run python -m tools.check_citations
 	cd $(WEB) && npm run lint
+
+citations: ## Report every `<doc>.md §N` citation and the heading it resolves to
+	uv run python -m tools.check_citations --report
 
 typecheck: ## Type-check Python and web
 	uv run pyright
