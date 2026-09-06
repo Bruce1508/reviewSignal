@@ -57,9 +57,16 @@ class EvaluationRunReader:
         self._session = session
 
     async def list_newest_first(self) -> Sequence[EvaluationRun]:
-        """`evaluation.md` §3 makes runs append-only, so the table is the history."""
+        """The table is the history: `data-model.md` §16 defines no update column.
+
+        `id` breaks ties because `created_at` defaults to `now()`, which PostgreSQL
+        holds constant across a transaction — runs written together would otherwise
+        come back in arbitrary order.
+        """
         result = await self._session.execute(
-            select(EvaluationRun).order_by(EvaluationRun.created_at.desc())
+            select(EvaluationRun).order_by(
+                EvaluationRun.created_at.desc(), EvaluationRun.id.desc()
+            )
         )
         return result.scalars().all()
 
