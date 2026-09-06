@@ -1,7 +1,7 @@
 """Evaluation run persistence (`docs/data-model.md` §16). No business rules here.
 
-Runs accumulate: `evaluation.md` §3 forbids rewriting a result in place, so there is
-no update path, only `record`.
+Runs accumulate: `data-model.md` §16 gives the table `created_at` and no update
+column, so there is no update path, only `record`.
 """
 
 import uuid

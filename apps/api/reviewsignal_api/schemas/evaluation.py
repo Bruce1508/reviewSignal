@@ -1,7 +1,8 @@
 """Schemas for `/evaluation/*` (`docs/api-spec.md` §10).
 
-`api-spec.md` §10 splits the read contract: the list is run history, metrics come from the detail
-route. The detail model therefore extends the summary instead of restating it.
+`api-spec.md` §10 describes the list as run history and the detail as metrics; this reads
+that as keeping the metrics body out of the list. The detail model therefore extends the
+summary instead of restating it.
 """
 
 import uuid

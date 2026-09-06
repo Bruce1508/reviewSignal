@@ -4,7 +4,8 @@ One run records one row: `record` writes a single `evaluation_runs` entry whose
 `metrics` body carries every family the pass produced (`docs/data-model.md` §16).
 
 Reaching this handler means a predictor was registered when the run was queued; the
-guard is repeated here because the registry can change between queueing and execution.
+guard is repeated here because the API and the RQ worker are separate processes and
+can be running skewed code.
 """
 
 from pathlib import Path
