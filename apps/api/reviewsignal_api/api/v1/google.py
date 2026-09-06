@@ -16,8 +16,8 @@ from reviewsignal_api.schemas.google import (
     GoogleLocationPayload,
     GoogleLocationSelection,
     GoogleStatusPayload,
-    JobAcceptedPayload,
 )
+from reviewsignal_api.schemas.jobs import JobAcceptedPayload
 from reviewsignal_api.services.google_connection import GoogleConnectionService
 from reviewsignal_worker.queue import enqueue
 
