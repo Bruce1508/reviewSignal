@@ -31,6 +31,7 @@ Micro Precision / Recall / F1
 Macro Precision / Recall / F1
 ```
 Macro F1 matters because rare categories should not disappear behind frequent ones.
+Macro averages over the label universe `gold | predicted`, so an invented category is scored and penalised rather than dropped. That universe widens when a model hallucinates, so its width is reported as `label_count` and §23 compares macro only across runs of equal width.
 
 ## 6. Per-Category Metrics
 Track precision, recall, and F1 per category to reveal weak categories or poor taxonomy descriptions.
