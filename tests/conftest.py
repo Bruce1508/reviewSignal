@@ -22,6 +22,7 @@ MANAGED_TABLES = (
     "taxonomy_changes",
     "taxonomy_nodes",
     "taxonomy_versions",
+    "evaluation_runs",
     "model_runs",
     "reviews",
     "sync_runs",
