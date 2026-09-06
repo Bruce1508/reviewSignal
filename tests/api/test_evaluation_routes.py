@@ -20,9 +20,12 @@ from reviewsignal_worker.db import session_scope
 
 # Shaped like `EvaluationResult.metrics_payload()`: three families under one row.
 METRICS = {
-    "classification": {"micro": {"precision": 1.0, "recall": 1.0, "f1": 1.0},
-                       "macro": {"precision": 1.0, "recall": 1.0, "f1": 1.0},
-                       "item_count": 2, "label_count": 3},
+    "classification": {
+        "micro": {"precision": 1.0, "recall": 1.0, "f1": 1.0},
+        "macro": {"precision": 1.0, "recall": 1.0, "f1": 1.0},
+        "item_count": 2,
+        "label_count": 3,
+    },
     "sentiment": {"accuracy": 1.0, "pair_count": 2},
     "calibration": {"expected_error": 0.0, "prediction_count": 2},
 }
@@ -112,8 +115,11 @@ async def test_an_unmeasured_family_is_reported_as_null_not_zero(
 ) -> None:
     """`evaluation.md` §30: a family that could not be measured is null, never zero."""
     run_id = _record_run(
-        metrics={"classification": METRICS["classification"], "sentiment": None,
-                 "calibration": None}
+        metrics={
+            "classification": METRICS["classification"],
+            "sentiment": None,
+            "calibration": None,
+        }
     )
 
     response = await client.get(f"/api/v1/evaluation/runs/{run_id}")

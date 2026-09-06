@@ -64,9 +64,7 @@ class EvaluationRunReader:
         come back in arbitrary order.
         """
         result = await self._session.execute(
-            select(EvaluationRun).order_by(
-                EvaluationRun.created_at.desc(), EvaluationRun.id.desc()
-            )
+            select(EvaluationRun).order_by(EvaluationRun.created_at.desc(), EvaluationRun.id.desc())
         )
         return result.scalars().all()
 

@@ -26,10 +26,16 @@ BENCHMARK = {
     "labeler": "test-fixture",
     "taxonomy_version": "taxonomy-test",
     "items": [
-        {"review_id": "t-1", "text": "Sharp prints, slow service.",
-         "aspects": [{"category_id": "cat-a", "sentiment": "positive"}]},
-        {"review_id": "t-2", "text": "Friendly staff.",
-         "aspects": [{"category_id": "cat-a", "sentiment": "positive"}]},
+        {
+            "review_id": "t-1",
+            "text": "Sharp prints, slow service.",
+            "aspects": [{"category_id": "cat-a", "sentiment": "positive"}],
+        },
+        {
+            "review_id": "t-2",
+            "text": "Friendly staff.",
+            "aspects": [{"category_id": "cat-a", "sentiment": "positive"}],
+        },
     ],
 }
 
@@ -60,9 +66,7 @@ def registered_predictor() -> Iterator[None]:
 
 def _configure_benchmark(monkeypatch: pytest.MonkeyPatch, path: Path | str) -> None:
     """Point the handler at a benchmark without mutating the cached global settings."""
-    monkeypatch.setattr(
-        "reviewsignal_worker.jobs.evaluation.benchmark_path", lambda: str(path)
-    )
+    monkeypatch.setattr("reviewsignal_worker.jobs.evaluation.benchmark_path", lambda: str(path))
 
 
 def test_the_handler_is_registered_under_its_job_type() -> None:
@@ -97,9 +101,7 @@ def test_the_recorded_type_names_the_workflow_not_a_metric_family(
     evaluation_run({"evaluation_type": "classification"})
 
     with session_scope() as session:
-        types = list(
-            session.execute(text("SELECT evaluation_type FROM evaluation_runs")).scalars()
-        )
+        types = list(session.execute(text("SELECT evaluation_type FROM evaluation_runs")).scalars())
     assert types == ["classification"]
 
 

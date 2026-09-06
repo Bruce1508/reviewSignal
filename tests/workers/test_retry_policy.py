@@ -80,9 +80,7 @@ def test_a_failing_job_is_retried_by_the_queue_and_lands_in_dead_letter(
     assert "Intentional failure" in (job.error_message or "")
 
 
-def test_a_succeeding_job_runs_once_through_the_queue(
-    session: Session, rq_queue: Queue
-) -> None:
+def test_a_succeeding_job_runs_once_through_the_queue(session: Session, rq_queue: Queue) -> None:
     job_id = enqueue("noop", payload={}, max_attempts=3)
 
     SimpleWorker([rq_queue], connection=rq_queue.connection).work(burst=True)

@@ -19,8 +19,9 @@ def _record(
     job_type: str = "noop", payload: dict | None = None, max_attempts: int = 3
 ) -> uuid.UUID:
     with session_scope() as session:
-        job = Job(job_type=job_type, status="queued", payload=payload or {},
-                  max_attempts=max_attempts)
+        job = Job(
+            job_type=job_type, status="queued", payload=payload or {}, max_attempts=max_attempts
+        )
         session.add(job)
         session.flush()
         return job.id

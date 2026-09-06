@@ -48,8 +48,9 @@ def retry_policy(max_attempts: int) -> Retry | None:
 def enqueue(job_type: str, payload: dict | None = None, max_attempts: int = 3) -> uuid.UUID:
     """Record the job, then hand it to RQ. Returns the application job id."""
     with session_scope() as session:
-        job = Job(job_type=job_type, status="queued", payload=payload or {},
-                  max_attempts=max_attempts)
+        job = Job(
+            job_type=job_type, status="queued", payload=payload or {}, max_attempts=max_attempts
+        )
         session.add(job)
         session.flush()
         job_id = job.id

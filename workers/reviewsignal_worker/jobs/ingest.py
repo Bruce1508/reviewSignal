@@ -52,6 +52,10 @@ def _ingest(mode: str) -> None:
 
     logger.info(
         "Google %s finished: fetched=%s created=%s updated=%s unchanged=%s unmappable=%s",
-        mode, outcome.fetched, outcome.created, outcome.updated,
-        outcome.unchanged, outcome.unmappable,
+        mode,
+        outcome.fetched,
+        outcome.created,
+        outcome.updated,
+        outcome.unchanged,
+        outcome.unmappable,
     )
