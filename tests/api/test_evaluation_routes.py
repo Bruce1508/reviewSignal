@@ -9,9 +9,12 @@ settled, and nothing else in the suite would catch a regression to it.
 import uuid
 from datetime import UTC, datetime, timedelta
 
+import pytest
 from httpx import AsyncClient
 from sqlalchemy import text
 
+from reviewsignal_api.ai.evaluation.protocols import PredictedAspect
+from reviewsignal_api.ai.evaluation.registry import PREDICTORS
 from reviewsignal_api.db.models import EvaluationRun
 from reviewsignal_worker.db import session_scope
 
@@ -177,3 +180,45 @@ async def test_an_empty_evaluation_type_is_a_validation_error(client: AsyncClien
 
     assert response.status_code == 400
     assert response.json()["error"]["code"] == "VALIDATION_ERROR"
+
+
+class _StubPredictor:
+    """Backs the workflow so the route will queue. The route never calls `predict`."""
+
+    name = "stub-classifier"
+    version = "v0"
+
+    def predict(self, item: object) -> list[PredictedAspect]:
+        return []
+
+
+async def test_queueing_a_run_with_a_registered_predictor_is_accepted(
+    client: AsyncClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The accept path. `job_type` is asserted as a literal, not through the constant,
+    so a typo in it cannot pass by agreeing with itself."""
+    fake_job_id = uuid.uuid4()
+    captured: dict = {}
+
+    def fake_enqueue(job_type: str, payload: dict | None, max_attempts: int) -> uuid.UUID:
+        captured["job_type"] = job_type
+        captured["payload"] = payload
+        return fake_job_id
+
+    monkeypatch.setattr("reviewsignal_api.services.evaluation.enqueue", fake_enqueue)
+    monkeypatch.setitem(PREDICTORS, "classification", _StubPredictor())
+
+    response = await client.post(
+        "/api/v1/evaluation/run", json={"evaluation_type": "classification"}
+    )
+
+    assert response.status_code == 202
+    body = response.json()
+    assert body["error"] is None
+    assert body["data"] == {
+        "job_id": str(fake_job_id),
+        "status": "queued",
+        "job_type": "evaluation_run",
+    }
+    assert captured["job_type"] == "evaluation_run"
+    assert captured["payload"] == {"evaluation_type": "classification"}
