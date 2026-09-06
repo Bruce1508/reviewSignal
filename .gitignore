@@ -33,3 +33,9 @@ ollama-data/
 
 # Client-confidential: product strategy doc stays local (see docs/README.md)
 docs/PRD.md
+
+# Instruction and config files for other AI coding agents. Local tooling, not a
+# repository contract — `CLAUDE.md` and `docs/` are the shared ones.
+AGENTS.md
+.agents/
+.codex/
