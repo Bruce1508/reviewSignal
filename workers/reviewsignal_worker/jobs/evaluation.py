@@ -8,6 +8,7 @@ guard is repeated here because the API and the RQ worker are separate processes 
 can be running skewed code.
 """
 
+import uuid
 from pathlib import Path
 
 from reviewsignal_api.ai.evaluation.dataset import load_benchmark
@@ -24,8 +25,14 @@ def benchmark_path() -> str:
     return get_settings().benchmark_path
 
 
-def evaluation_run(payload: dict) -> None:
+def evaluation_run(payload: dict, job_id: uuid.UUID) -> None:
     evaluation_type = payload["evaluation_type"]
+
+    with session_scope() as session:
+        if EvaluationRunRepository(session).already_recorded(job_id):
+            # A retry that got past the run being committed. Re-scoring would add a
+            # second baseline to the history, so this attempt has nothing left to do.
+            return
 
     predictor = get_predictor(evaluation_type)
     if predictor is None:
@@ -41,4 +48,6 @@ def evaluation_run(payload: dict) -> None:
 
     result = run_evaluation(load_benchmark(Path(path)), predictor)
     with session_scope() as session:
-        EvaluationRunRepository(session).record(result, evaluation_type=evaluation_type)
+        EvaluationRunRepository(session).record(
+            result, evaluation_type=evaluation_type, job_id=job_id
+        )

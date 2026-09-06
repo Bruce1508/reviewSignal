@@ -25,12 +25,14 @@ class EvaluationRunRepository:
         evaluation_type: str,
         taxonomy_version_id: uuid.UUID | None = None,
         notes: str | None = None,
+        job_id: uuid.UUID | None = None,
     ) -> EvaluationRun:
         """`taxonomy_version_id` is passed in rather than read from the dataset: the
         benchmark file records a taxonomy version as provenance text, while this column
         is a foreign key the caller must resolve. The provenance text is stored too, so
         a run still names its taxonomy before any `taxonomy_versions` row exists."""
         run = EvaluationRun(
+            job_id=job_id,
             evaluation_type=evaluation_type,
             model_name=result.model_name,
             model_version=result.model_version,
@@ -43,6 +45,18 @@ class EvaluationRunRepository:
         self._session.add(run)
         self._session.flush()
         return run
+
+    def already_recorded(self, job_id: uuid.UUID) -> bool:
+        """Whether this job already wrote its run.
+
+        A retry that re-scored and re-recorded would put a second baseline into the
+        history `evaluation.md` §23 compares against. The unique constraint is the
+        backstop; this is the check that keeps the retry from failing on it.
+        """
+        found = self._session.execute(
+            select(EvaluationRun.id).where(EvaluationRun.job_id == job_id)
+        ).first()
+        return found is not None
 
 
 class EvaluationRunReader:

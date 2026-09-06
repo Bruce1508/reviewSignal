@@ -5,6 +5,7 @@ so both handlers are thin wrappers over `IngestionService`.
 """
 
 import logging
+import uuid
 
 from reviewsignal_api.integrations.base import SourceNotConnectedError
 from reviewsignal_api.integrations.google.adapter import GoogleReviewSourceAdapter
@@ -18,12 +19,12 @@ logger = logging.getLogger(__name__)
 SOURCE = "google"
 
 
-def google_backfill(payload: dict) -> None:
+def google_backfill(payload: dict, job_id: uuid.UUID) -> None:
     """One-time historical backfill (`docs/PRD.md` §4.1)."""
     _ingest(mode="backfill")
 
 
-def google_sync(payload: dict) -> None:
+def google_sync(payload: dict, job_id: uuid.UUID) -> None:
     """Daily incremental sync (`docs/PRD.md` §4.2)."""
     _ingest(mode="incremental")
 

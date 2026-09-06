@@ -6,6 +6,7 @@ still pinned down now, rather than after a real classifier lands.
 """
 
 import json
+import uuid
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -14,7 +15,7 @@ from sqlalchemy import text
 
 from reviewsignal_api.ai.evaluation.protocols import PredictedAspect
 from reviewsignal_api.ai.evaluation.registry import PREDICTORS
-from reviewsignal_api.db.models import EvaluationRun
+from reviewsignal_api.db.models import EvaluationRun, Job
 from reviewsignal_worker.db import session_scope
 from reviewsignal_worker.errors import PermanentJobError
 from reviewsignal_worker.jobs import HANDLERS
@@ -69,6 +70,15 @@ def _configure_benchmark(monkeypatch: pytest.MonkeyPatch, path: Path | str) -> N
     monkeypatch.setattr("reviewsignal_worker.jobs.evaluation.benchmark_path", lambda: str(path))
 
 
+def _queued_job() -> uuid.UUID:
+    """`evaluation_runs.job_id` is a foreign key, so the run needs a real job."""
+    with session_scope() as session:
+        job = Job(job_type="evaluation_run", status="running", payload={}, max_attempts=3)
+        session.add(job)
+        session.flush()
+        return job.id
+
+
 def test_the_handler_is_registered_under_its_job_type() -> None:
     assert HANDLERS["evaluation_run"] is evaluation_run
 
@@ -79,7 +89,7 @@ def test_a_run_records_exactly_one_row_with_every_family(
     """One run is one row (`docs/data-model.md` §16), not one row per metric family."""
     _configure_benchmark(monkeypatch, benchmark_file)
 
-    evaluation_run({"evaluation_type": "classification"})
+    evaluation_run({"evaluation_type": "classification"}, _queued_job())
 
     with session_scope() as session:
         rows = session.query(EvaluationRun).all()
@@ -98,7 +108,7 @@ def test_the_recorded_type_names_the_workflow_not_a_metric_family(
     """`evaluation_type` is the workflow evaluated; sentiment/calibration are families."""
     _configure_benchmark(monkeypatch, benchmark_file)
 
-    evaluation_run({"evaluation_type": "classification"})
+    evaluation_run({"evaluation_type": "classification"}, _queued_job())
 
     with session_scope() as session:
         types = list(session.execute(text("SELECT evaluation_type FROM evaluation_runs")).scalars())
@@ -111,7 +121,7 @@ def test_an_unregistered_predictor_fails_the_job(
     _configure_benchmark(monkeypatch, benchmark_file)
 
     with pytest.raises(PermanentJobError):
-        evaluation_run({"evaluation_type": "classification"})
+        evaluation_run({"evaluation_type": "classification"}, _queued_job())
 
 
 def test_an_unconfigured_benchmark_fails_the_job_rather_than_scoring_nothing(
@@ -121,7 +131,7 @@ def test_an_unconfigured_benchmark_fails_the_job_rather_than_scoring_nothing(
     _configure_benchmark(monkeypatch, "")
 
     with pytest.raises(PermanentJobError, match="benchmark"):
-        evaluation_run({"evaluation_type": "classification"})
+        evaluation_run({"evaluation_type": "classification"}, _queued_job())
 
 
 def test_a_missing_evaluation_type_in_the_payload_fails_the_job(
@@ -130,4 +140,34 @@ def test_a_missing_evaluation_type_in_the_payload_fails_the_job(
     _configure_benchmark(monkeypatch, benchmark_file)
 
     with pytest.raises(KeyError):
-        evaluation_run({})
+        evaluation_run({}, _queued_job())
+
+
+def test_a_retried_job_does_not_record_a_second_run(
+    monkeypatch: pytest.MonkeyPatch, benchmark_file: Path, registered_predictor: None
+) -> None:
+    """`record` is insert-only, so this guard is what stops a requeue adding a second
+    baseline to the history `docs/evaluation.md` §23 compares against."""
+    _configure_benchmark(monkeypatch, benchmark_file)
+    job_id = _queued_job()
+
+    evaluation_run({"evaluation_type": "classification"}, job_id)
+    evaluation_run({"evaluation_type": "classification"}, job_id)
+
+    with session_scope() as session:
+        rows = session.query(EvaluationRun).all()
+        assert len(rows) == 1
+        assert rows[0].job_id == job_id
+
+
+def test_a_separate_job_records_its_own_run(
+    monkeypatch: pytest.MonkeyPatch, benchmark_file: Path, registered_predictor: None
+) -> None:
+    """The guard keys on the job, so it must not suppress a genuinely new run."""
+    _configure_benchmark(monkeypatch, benchmark_file)
+
+    evaluation_run({"evaluation_type": "classification"}, _queued_job())
+    evaluation_run({"evaluation_type": "classification"}, _queued_job())
+
+    with session_scope() as session:
+        assert session.query(EvaluationRun).count() == 2
