@@ -103,7 +103,7 @@ def test_an_empty_bucket_contributes_nothing_to_ece() -> None:
 def test_bucket_counts_sum_to_the_number_of_predictions() -> None:
     result = calibration_metrics(CONFIDENCES, CORRECT, bucket_count=10)
     assert sum(bucket.count for bucket in result.buckets) == 4
-    assert result.item_count == 4
+    assert result.prediction_count == 4
 
 
 # --- Rule 4: boundary confidences land in exactly one bucket ---------------

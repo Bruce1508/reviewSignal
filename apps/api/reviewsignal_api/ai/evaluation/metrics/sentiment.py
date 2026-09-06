@@ -18,7 +18,9 @@ class SentimentMetrics:
     per_sentiment: dict[str, Score]
     # confusion[gold][predicted] -> count.
     confusion: dict[str, dict[str, int]]
-    item_count: int
+    # Aspects where gold and prediction both named the category, not reviews:
+    # a category the model missed is counted by the classification metrics.
+    pair_count: int
 
 
 def sentiment_metrics(gold: Sequence[str], predicted: Sequence[str]) -> SentimentMetrics:
@@ -52,5 +54,5 @@ def sentiment_metrics(gold: Sequence[str], predicted: Sequence[str]) -> Sentimen
         macro_f1=mean(observed),
         per_sentiment=per_sentiment,
         confusion=confusion,
-        item_count=len(gold),
+        pair_count=len(gold),
     )

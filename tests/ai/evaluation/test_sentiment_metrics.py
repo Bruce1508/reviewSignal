@@ -107,8 +107,8 @@ def test_confusion_matrix_rows_sum_to_gold_support() -> None:
     assert sum(confusion["negative"].values()) == 2
 
 
-def test_item_count_reports_how_many_aspects_were_scored() -> None:
-    assert sentiment_metrics(GOLD, PREDICTED).item_count == 8
+def test_pair_count_reports_how_many_aspects_were_scored() -> None:
+    assert sentiment_metrics(GOLD, PREDICTED).pair_count == 8
 
 
 # --- Rule 4: perfect and worst cases ---------------------------------------

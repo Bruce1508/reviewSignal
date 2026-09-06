@@ -103,6 +103,24 @@ def test_item_count_reports_how_many_items_were_scored() -> None:
     assert classification_metrics(GOLD, PREDICTED).item_count == 3
 
 
+def test_label_count_reports_the_width_of_the_macro_denominator() -> None:
+    assert classification_metrics(GOLD, PREDICTED).label_count == 3
+
+
+def test_a_hallucinated_category_widens_the_macro_denominator() -> None:
+    """Macro averages over `gold | predicted`, so two runs are only comparable at
+    equal `label_count` (`evaluation.md` §23)."""
+    invented = [{"wait_time"}, {"photo_quality", "staff", "parking"}, set()]
+
+    grounded = classification_metrics(GOLD, PREDICTED)
+    hallucinating = classification_metrics(GOLD, invented)
+
+    assert grounded.label_count == 3
+    assert hallucinating.label_count == 4
+    # parking is TP=0 FP=1 FN=0 -> F1 0.0, averaged into a denominator of 4 not 3.
+    assert hallucinating.macro.f1 < grounded.macro.f1
+
+
 # --- Rule 4: degenerate inputs score zero rather than dividing by zero -------
 
 

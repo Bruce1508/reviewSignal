@@ -35,7 +35,7 @@ packages = ["apps/api/reviewsignal_api", "workers/reviewsignal_worker"]
 [tool.ruff]
 line-length = 100
 target-version = "py312"
-src = ["apps/api", "workers", "tests"]
+src = ["apps/api", "workers", "tests", "tools"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "TID"]
@@ -45,7 +45,7 @@ select = ["E", "F", "I", "UP", "B", "SIM", "TID"]
 "migrations/versions/*" = ["E501"]
 
 [tool.pyright]
-include = ["apps/api", "workers", "tests"]
+include = ["apps/api", "workers", "tests", "tools"]
 extraPaths = ["apps/api", "workers"]
 typeCheckingMode = "basic"
 pythonVersion = "3.12"
@@ -54,5 +54,5 @@ reportMissingImports = true
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
-pythonpath = ["apps/api", "workers"]
+pythonpath = ["apps/api", "workers", "."]
 addopts = "-q"

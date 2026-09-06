@@ -25,12 +25,14 @@ class EvaluationRunRepository:
     ) -> EvaluationRun:
         """`taxonomy_version_id` is passed in rather than read from the dataset: the
         benchmark file records a taxonomy version as provenance text, while this column
-        is a foreign key the caller must resolve."""
+        is a foreign key the caller must resolve. The provenance text is stored too, so
+        a run still names its taxonomy before any `taxonomy_versions` row exists."""
         run = EvaluationRun(
             evaluation_type=evaluation_type,
             model_name=result.model_name,
             model_version=result.model_version,
             taxonomy_version_id=taxonomy_version_id,
+            taxonomy_version=result.taxonomy_version,
             dataset_version=result.dataset_version,
             metrics=result.metrics_payload(),
             notes=notes,

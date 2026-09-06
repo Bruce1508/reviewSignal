@@ -16,6 +16,9 @@ class ClassificationMetrics:
     macro: Score
     per_category: dict[str, Score]
     item_count: int
+    # How many labels `macro` averaged over. It varies with what the model predicted,
+    # so an `evaluation.md` §23 regression comparison must check it before comparing.
+    label_count: int
 
 
 def classification_metrics(
@@ -65,5 +68,9 @@ def classification_metrics(
         support=micro.support,
     )
     return ClassificationMetrics(
-        micro=micro, macro=macro, per_category=per_category, item_count=len(gold)
+        micro=micro,
+        macro=macro,
+        per_category=per_category,
+        item_count=len(gold),
+        label_count=len(labels),
     )

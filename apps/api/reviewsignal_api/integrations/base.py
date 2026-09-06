@@ -27,7 +27,7 @@ class NormalizedReview:
 
     `source` is not carried here: the adapter declares it, so a DTO cannot disagree
     with the adapter that produced it. `raw_payload` preserves the untouched source
-    record, which §19 requires for reprocessing.
+    record, which `data-model.md` §19 requires for reprocessing.
     """
 
     source_review_id: str

@@ -446,6 +446,9 @@ class EvaluationRun(Base):
     taxonomy_version_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("taxonomy_versions.id")
     )
+    # The benchmark names its taxonomy as text; the key above points at a row that may
+    # not exist yet. Both are kept so a run can say what it scored (`evaluation.md` §30).
+    taxonomy_version: Mapped[str | None] = mapped_column(String(64))
     dataset_version: Mapped[str] = mapped_column(String(64), nullable=False)
     metrics: Mapped[dict] = mapped_column(JSONB, nullable=False, server_default="{}")
     notes: Mapped[str | None] = mapped_column(Text)

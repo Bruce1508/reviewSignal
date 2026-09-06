@@ -31,6 +31,7 @@ Micro Precision / Recall / F1
 Macro Precision / Recall / F1
 ```
 Macro F1 matters because rare categories should not disappear behind frequent ones.
+Macro averages over the label universe `gold | predicted`, so an invented category is scored and penalised rather than dropped. That universe widens when a model hallucinates, so its width is reported alongside the scores as `label_count`.
 
 ## 6. Per-Category Metrics
 Track precision, recall, and F1 per category to reveal weak categories or poor taxonomy descriptions.
@@ -107,6 +108,7 @@ Fail recommendations that invent staff counts, operational facts, unsupported ca
 
 ## 23. Regression Testing
 Every important model/prompt/taxonomy change reruns the benchmark against the current production baseline.
+Compare macro only across runs of equal `label_count`: the label universe widens when a model hallucinates (§5), and macro scores averaged over different widths are not commensurable.
 
 ## 24. Model Promotion Gate
 Promote only when required metrics pass, no critical regression appears, and structured-output reliability is acceptable. Exact numeric gates are set after baseline measurements exist.
