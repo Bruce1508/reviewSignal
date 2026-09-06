@@ -12,10 +12,10 @@ from reviewsignal_api.db.models import EvaluationRun, TaxonomyVersion
 from reviewsignal_api.repositories.evaluation_runs import EvaluationRunRepository
 
 
-def make_result(*, full: bool = False) -> EvaluationResult:
+def make_result(*, full: bool = False, taxonomy_version: str | None = None) -> EvaluationResult:
     return EvaluationResult(
         dataset_version="v0-synthetic",
-        taxonomy_version=None,
+        taxonomy_version=taxonomy_version,
         model_name="stub-classifier",
         model_version="v1",
         classification=classification_metrics([{"wait_time"}, {"pricing"}], [{"wait_time"}, set()]),
@@ -103,6 +103,41 @@ def test_a_run_without_a_taxonomy_version_is_allowed(session: Session) -> None:
     run = EvaluationRunRepository(session).record(make_result(), evaluation_type="classification")
 
     assert reread(session, run).taxonomy_version_id is None
+
+
+def test_the_benchmark_taxonomy_version_is_recorded_as_provenance(session: Session) -> None:
+    """Phase 0 has no `taxonomy_versions` rows, so the benchmark's own string is the
+    only taxonomy identity a run can carry (`evaluation.md` §30)."""
+    run = EvaluationRunRepository(session).record(
+        make_result(taxonomy_version="taxonomy-2026-09-01"), evaluation_type="classification"
+    )
+
+    stored = reread(session, run)
+    assert stored.taxonomy_version == "taxonomy-2026-09-01"
+    assert stored.taxonomy_version_id is None
+
+
+def test_taxonomy_provenance_is_independent_of_the_foreign_key(session: Session) -> None:
+    """The string says what the labels were made against; the key points at a row."""
+    version = TaxonomyVersion(version_number=1, status="candidate", created_by="tester")
+    session.add(version)
+    session.flush()
+
+    run = EvaluationRunRepository(session).record(
+        make_result(taxonomy_version="taxonomy-2026-09-01"),
+        evaluation_type="classification",
+        taxonomy_version_id=version.id,
+    )
+
+    stored = reread(session, run)
+    assert stored.taxonomy_version == "taxonomy-2026-09-01"
+    assert stored.taxonomy_version_id == version.id
+
+
+def test_a_benchmark_without_a_taxonomy_version_records_none(session: Session) -> None:
+    run = EvaluationRunRepository(session).record(make_result(), evaluation_type="classification")
+
+    assert reread(session, run).taxonomy_version is None
 
 
 def test_each_record_creates_a_distinct_run(session: Session) -> None:

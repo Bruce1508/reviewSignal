@@ -236,12 +236,14 @@ evaluation_type VARCHAR
 model_name VARCHAR
 model_version VARCHAR NULL
 taxonomy_version_id UUID NULL
+taxonomy_version VARCHAR NULL
 dataset_version VARCHAR
 metrics JSONB
 notes TEXT NULL
 created_at TIMESTAMPTZ
 ```
 Types may include classification, sentiment, calibration, taxonomy, anomaly, recommendation.
+`taxonomy_version_id` links a run to a stored taxonomy; `taxonomy_version` is the version string the benchmark was labelled against, kept so a run still names its taxonomy when no `taxonomy_versions` row exists (`evaluation.md` §30).
 
 ## 17. `settings`
 ```text
