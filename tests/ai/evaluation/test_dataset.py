@@ -169,3 +169,14 @@ def test_an_unrecognised_field_on_the_dataset_is_rejected(tmp_path: Path) -> Non
     payload["dataset_vresion"] = "v-typo"
     with pytest.raises(ValueError, match="dataset_vresion"):
         load_benchmark(write(tmp_path, payload))
+
+
+def test_non_ascii_gold_text_survives_loading(tmp_path: Path) -> None:
+    """Real review text carries accents, curly quotes and emoji; the loader must not
+    depend on whatever encoding the runner's locale happens to default to."""
+    text = "\u1ea2nh in r\u1ea5t \u0111\u1eb9p \u2014 \u201cs\u1eafc n\u00e9t\u201d \U0001f4f8"
+    payload = json.loads(json.dumps(VALID))
+    payload["items"][0]["text"] = text
+    path = tmp_path / "benchmark.json"
+    path.write_bytes(json.dumps(payload, ensure_ascii=False).encode("utf-8"))
+    assert load_benchmark(path).items[0].text == text

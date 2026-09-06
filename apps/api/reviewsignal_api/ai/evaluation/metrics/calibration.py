@@ -14,7 +14,13 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class ReliabilityBucket:
-    """One point on the reliability curve. `lower` is inclusive, `upper` exclusive."""
+    """One point on the reliability curve.
+
+    `lower` is inclusive and `upper` exclusive, except on the last bucket, whose `upper`
+    is inclusive so that a confidence of exactly 1.0 has a home. Deriving membership as
+    `lower <= c < upper` would drop those predictions and the counts would stop summing
+    to `item_count`.
+    """
 
     lower: float
     upper: float

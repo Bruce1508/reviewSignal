@@ -85,4 +85,4 @@ class BenchmarkDataset(BaseModel):
 
 def load_benchmark(path: Path) -> BenchmarkDataset:
     """Read and validate a benchmark file. A missing file raises, never returns empty."""
-    return BenchmarkDataset.model_validate_json(path.read_text())
+    return BenchmarkDataset.model_validate_json(path.read_text(encoding="utf-8"))
