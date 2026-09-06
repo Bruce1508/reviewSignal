@@ -19,7 +19,7 @@ class ReliabilityBucket:
     `lower` is inclusive and `upper` exclusive, except on the last bucket, whose `upper`
     is inclusive so that a confidence of exactly 1.0 has a home. Deriving membership as
     `lower <= c < upper` would drop those predictions and the counts would stop summing
-    to `item_count`.
+    to `prediction_count`.
     """
 
     lower: float
@@ -34,7 +34,8 @@ class CalibrationMetrics:
     brier_score: float
     expected_calibration_error: float
     buckets: list[ReliabilityBucket]
-    item_count: int
+    # One per predicted aspect, so a review with three aspects contributes three.
+    prediction_count: int
 
 
 def calibration_metrics(
@@ -93,5 +94,5 @@ def calibration_metrics(
         brier_score=squared_error / total,
         expected_calibration_error=expected_calibration_error,
         buckets=buckets,
-        item_count=total,
+        prediction_count=total,
     )

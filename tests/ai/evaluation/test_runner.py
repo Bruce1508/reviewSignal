@@ -120,7 +120,7 @@ def test_sentiment_is_scored_on_categories_present_in_both_gold_and_prediction()
     again as a sentiment miss, when classification metrics already measure the first."""
     sentiment = run().sentiment
     assert sentiment is not None
-    assert sentiment.item_count == 2
+    assert sentiment.pair_count == 2
     assert sentiment.accuracy == pytest.approx(0.5)
 
 
@@ -137,7 +137,7 @@ def test_a_wrong_sentiment_on_a_correct_category_shows_in_the_confusion_matrix()
 def test_calibration_scores_every_predicted_aspect() -> None:
     calibration = run().calibration
     assert calibration is not None
-    assert calibration.item_count == 3
+    assert calibration.prediction_count == 3
 
 
 def test_a_prediction_counts_as_correct_only_when_category_and_sentiment_both_match() -> None:
