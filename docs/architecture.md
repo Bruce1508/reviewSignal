@@ -155,6 +155,7 @@ All external/AI jobs follow:
 ```text
 run → retry with backoff → retry → dead-letter queue
 ```
+A failure that no retry could fix — an unregistered predictor, an unset benchmark path — skips the backoff schedule and dead-letters on its first attempt. The chain above is for failures that might not recur; spending it on one that recurs identically only delays the same outcome and reports three failures where there was one, which `api-spec.md` §2 surfaces as operational alarm.
 Required protections: idempotent Google sync, structured-output validation, model timeout handling, failed-job inspection, and manual requeue.
 
 ## 14. Security

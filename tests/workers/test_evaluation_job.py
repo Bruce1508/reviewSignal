@@ -14,9 +14,9 @@ from sqlalchemy import text
 
 from reviewsignal_api.ai.evaluation.protocols import PredictedAspect
 from reviewsignal_api.ai.evaluation.registry import PREDICTORS
-from reviewsignal_api.core.errors import ModelUnavailableError
 from reviewsignal_api.db.models import EvaluationRun
 from reviewsignal_worker.db import session_scope
+from reviewsignal_worker.errors import PermanentJobError
 from reviewsignal_worker.jobs import HANDLERS
 from reviewsignal_worker.jobs.evaluation import evaluation_run
 
@@ -110,7 +110,7 @@ def test_an_unregistered_predictor_fails_the_job(
 ) -> None:
     _configure_benchmark(monkeypatch, benchmark_file)
 
-    with pytest.raises(ModelUnavailableError):
+    with pytest.raises(PermanentJobError):
         evaluation_run({"evaluation_type": "classification"})
 
 
@@ -120,7 +120,7 @@ def test_an_unconfigured_benchmark_fails_the_job_rather_than_scoring_nothing(
     """A missing benchmark must surface, never produce an empty-but-successful run."""
     _configure_benchmark(monkeypatch, "")
 
-    with pytest.raises(ValueError, match="benchmark"):
+    with pytest.raises(PermanentJobError, match="benchmark"):
         evaluation_run({"evaluation_type": "classification"})
 
 
