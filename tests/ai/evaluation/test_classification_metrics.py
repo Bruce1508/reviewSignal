@@ -109,7 +109,7 @@ def test_label_count_reports_the_width_of_the_macro_denominator() -> None:
 
 def test_a_hallucinated_category_widens_the_macro_denominator() -> None:
     """Macro averages over `gold | predicted`, so two runs are only comparable at
-    equal `label_count` (`evaluation.md` §23, §24)."""
+    equal `label_count` (`evaluation.md` §23)."""
     invented = [{"wait_time"}, {"photo_quality", "staff", "parking"}, set()]
 
     grounded = classification_metrics(GOLD, PREDICTED)

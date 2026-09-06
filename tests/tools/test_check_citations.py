@@ -49,6 +49,21 @@ def test_a_citation_wrapped_onto_the_next_line_inherits_the_document() -> None:
     assert citation.line == 2
 
 
+def test_a_document_mentioned_in_a_different_sentence_does_not_leak_downward() -> None:
+    """The one-line lookback exists for a citation the formatter wrapped, not for any
+    document mentioned nearby. Attributing to the wrong document is worse than failing:
+    the section resolves, so the report shows a heading that supports nothing."""
+    text = (
+        "Field naming follows `docs/data-model.md` for the review schema.\n"
+        "Multi-label scoring in this module follows §5's averaging rule.\n"
+    )
+
+    (citation,) = parse_citations(text)
+
+    assert citation.section == "5"
+    assert citation.document is None
+
+
 def test_a_document_named_further_back_than_one_line_does_not_attribute() -> None:
     """Guessing across a whole docstring would silently mis-attribute; failing loudly
     forces the citation to name its own document."""

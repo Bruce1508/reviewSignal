@@ -29,6 +29,10 @@ EXCLUDED = ("tests/tools/test_check_citations.py",)
 _SECTION = re.compile(r"§(\d+(?:\.\d+)*)")
 _DOCUMENT = re.compile(r"([A-Za-z0-9_-]+\.md)")
 _PRD_SHORTHAND = re.compile(r"\bPRD\s*$")
+# A wrapped citation leaves the document at the end of one line and the `§` at the
+# start of the next. Anything looser is a different sentence about a different
+# document, and inheriting from it would validate the claim against the wrong doc.
+_WRAPPED_DOCUMENT = re.compile(r"([A-Za-z0-9_-]+\.md)[`)\s]*$")
 # `docs/PRD.md` writes headings as `# **10\\. Title**`; the others as `## 16. Title`.
 _HEADING = re.compile(r"^#{1,6}\s+\*{0,2}(\d+(?:\.\d+)*)\\?\.?\s+(.+?)\s*$")
 # A citation may name a numbered rule inside a section, as in `api-spec.md` §16.5.
@@ -72,10 +76,11 @@ def parse_citations(text: str) -> list[Citation]:
     """Find every `§N` and attribute it to the document it belongs to.
 
     A document is looked for before the `§` on the same line, then as the bare `PRD`
-    shorthand, then on the line immediately above — which is how a citation wrapped by
-    the formatter still resolves. Nothing further back counts: guessing across a whole
-    docstring would attribute silently and wrongly, so an unattributed citation is
-    reported instead of resolved.
+    shorthand, then on the line immediately above — but only in the shape the formatter
+    produces when it wraps a citation: the document ends that line and the `§` opens this
+    one. A document merely mentioned nearby does not count, because attributing to the
+    wrong document is worse than not attributing at all — the section resolves, so the
+    report prints a heading that supports nothing and no one is warned.
     """
     lines = text.splitlines()
     citations: list[Citation] = []
@@ -85,8 +90,9 @@ def parse_citations(text: str) -> list[Citation]:
             document = _document_in(before)
             if document is None and _PRD_SHORTHAND.search(before):
                 document = "PRD.md"
-            if document is None and number >= 2:
-                document = _document_in(lines[number - 2])
+            if document is None and number >= 2 and not before.strip():
+                wrapped = _WRAPPED_DOCUMENT.search(lines[number - 2])
+                document = wrapped.group(1) if wrapped else None
             citations.append(Citation(line=number, section=match.group(1), document=document))
     return citations
 
