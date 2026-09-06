@@ -5,7 +5,10 @@ no update path, only `record`.
 """
 
 import uuid
+from collections.abc import Sequence
 
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
 from reviewsignal_api.ai.evaluation.runner import EvaluationResult
@@ -40,3 +43,25 @@ class EvaluationRunRepository:
         self._session.add(run)
         self._session.flush()
         return run
+
+
+class EvaluationRunReader:
+    """Async read path for the API.
+
+    The writer above is synchronous because it runs inside the RQ worker, while the API
+    is async (`db/session.py`). Both live here because both are `evaluation_runs`
+    persistence and neither carries a business rule.
+    """
+
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def list_newest_first(self) -> Sequence[EvaluationRun]:
+        """`evaluation.md` §3 makes runs append-only, so the table is the history."""
+        result = await self._session.execute(
+            select(EvaluationRun).order_by(EvaluationRun.created_at.desc())
+        )
+        return result.scalars().all()
+
+    async def get(self, run_id: uuid.UUID) -> EvaluationRun | None:
+        return await self._session.get(EvaluationRun, run_id)

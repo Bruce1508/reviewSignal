@@ -176,6 +176,12 @@ Queues benchmark evaluation.
 ```json
 {"evaluation_type":"classification"}
 ```
+`evaluation_type` names the workflow to evaluate, not a metric family: one run records
+one `evaluation_runs` row holding every family it produced (`data-model.md` §16).
+Returns `MODEL_UNAVAILABLE` when no predictor is registered for that workflow, so no job
+is queued that cannot succeed.
+
+These endpoints exist before the evaluation dashboard, which `PRD.md` places in Phase 3.
 
 ## 11. Settings
 ### `GET /settings`
