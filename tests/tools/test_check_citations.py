@@ -163,7 +163,7 @@ def test_a_report_fails_on_broken_or_unattributed_only() -> None:
 
 
 def test_every_citation_in_the_repository_resolves() -> None:
-    report = check(Path(__file__).resolve().parents[2])
+    report, _ = check(Path(__file__).resolve().parents[2])
 
     assert report.total > 100, "the walker found almost nothing; check its file globs"
     assert report.broken == [], f"broken citations: {report.broken}"

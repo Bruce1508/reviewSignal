@@ -39,6 +39,10 @@ _HEADING = re.compile(r"^#{1,6}\s+\*{0,2}(\d+(?:\.\d+)*)\\?\.?\s+(.+?)\s*$")
 _LIST_ITEM = re.compile(r"^(\d+)\.\s+(.+?)\s*$")
 
 
+# Section number -> title, for each document filename under `docs/`.
+Documents = dict[str, dict[str, str]]
+
+
 @dataclass(frozen=True)
 class Citation:
     line: int
@@ -117,7 +121,7 @@ def section_titles(markdown: str) -> dict[str, str]:
     return titles
 
 
-def resolve(citations: list[Citation], documents: dict[str, dict[str, str]]) -> Report:
+def resolve(citations: list[Citation], documents: Documents) -> Report:
     """Sort citations into ok, broken, skipped and unattributed."""
     report = Report()
     for citation in citations:
@@ -132,8 +136,13 @@ def resolve(citations: list[Citation], documents: dict[str, dict[str, str]]) -> 
     return report
 
 
-def check(root: Path) -> Report:
-    """Walk the source under `root` and resolve every citation against `docs/`."""
+def check(root: Path) -> tuple[Report, Documents]:
+    """Walk the source under `root` and resolve every citation against `docs/`.
+
+    The parsed documents come back with the report because `--report` needs the
+    heading titles, and reading `docs/` a second time to get them risks printing
+    titles that disagree with the ones the report was built from.
+    """
     documents = {
         path.name: section_titles(path.read_text(encoding="utf-8"))
         for path in sorted((root / "docs").glob("*.md"))
@@ -146,16 +155,12 @@ def check(root: Path) -> Report:
                 continue
             for citation in parse_citations(path.read_text(encoding="utf-8")):
                 citations.append(replace(citation, path=relative))
-    return resolve(citations, documents)
+    return resolve(citations, documents), documents
 
 
 def main(argv: list[str] | None = None) -> int:
     root = Path(__file__).resolve().parents[1]
-    report = check(root)
-    documents = {
-        path.name: section_titles(path.read_text(encoding="utf-8"))
-        for path in sorted((root / "docs").glob("*.md"))
-    }
+    report, documents = check(root)
 
     if "--report" in (argv if argv is not None else sys.argv[1:]):
         for citation in report.ok:
