@@ -104,6 +104,15 @@ async def test_google_routes_are_guarded_too(client: AsyncClient, guarded: Setti
     assert response.status_code == 401
 
 
+async def test_evaluation_routes_are_guarded_too(
+    client: AsyncClient, guarded: Settings
+) -> None:
+    """`api-spec.md` §15 guards every `/api/v1` route but `/health`, this one included."""
+    response = await client.get("/api/v1/evaluation/runs")
+
+    assert response.status_code == 401
+
+
 async def test_a_protected_route_accepts_a_freshly_issued_cookie(
     client: AsyncClient, guarded: Settings
 ) -> None:

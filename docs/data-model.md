@@ -242,7 +242,7 @@ metrics JSONB
 notes TEXT NULL
 created_at TIMESTAMPTZ
 ```
-Types may include classification, sentiment, calibration, taxonomy, anomaly, recommendation.
+`evaluation_type` names the workflow evaluated — `classification` today, and later `taxonomy`, `anomaly`, or `recommendation`. One run records one row: every metric family that pass produced (classification, sentiment, calibration) is nested inside `metrics`, and a family it could not measure is stored as null (`evaluation.md` §30).
 `taxonomy_version_id` links a run to a stored taxonomy; `taxonomy_version` is the version string the benchmark was labelled against, kept so a run still names its taxonomy when no `taxonomy_versions` row exists (`evaluation.md` §30).
 
 ## 17. `settings`

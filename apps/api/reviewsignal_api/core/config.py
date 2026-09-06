@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "qwen2.5:14b"
     embedding_model: str = "BAAI/bge-small-en-v1.5"
+    # Benchmark the `evaluation_run` job scores against (`docs/evaluation.md` §2).
+    # Unset fails the job rather than silently scoring the synthetic placeholder.
+    benchmark_path: str = ""
 
     session_secret: str
     # Operator password for the admin session (`docs/api-spec.md` §15).

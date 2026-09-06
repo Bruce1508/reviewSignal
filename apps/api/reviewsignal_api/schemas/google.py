@@ -1,6 +1,5 @@
-"""Schemas for the Google connection and async-job contracts (`docs/api-spec.md` §8, §12)."""
+"""Schemas for the Google connection contract (`docs/api-spec.md` §8)."""
 
-import uuid
 from datetime import datetime
 
 from pydantic import BaseModel, Field
@@ -34,9 +33,3 @@ class GoogleLocationSelection(BaseModel):
 
     account_id: str = Field(pattern=RESOURCE_ID_PATTERN)
     location_id: str = Field(pattern=RESOURCE_ID_PATTERN)
-
-
-class JobAcceptedPayload(BaseModel):
-    job_id: uuid.UUID
-    status: str
-    job_type: str

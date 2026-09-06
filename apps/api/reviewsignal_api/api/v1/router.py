@@ -9,7 +9,7 @@ rather than an invisible one spread across handlers.
 from fastapi import APIRouter, Depends
 
 from reviewsignal_api.api.deps import require_session
-from reviewsignal_api.api.v1 import auth, google, system
+from reviewsignal_api.api.v1 import auth, evaluation, google, system
 
 GUARDED = [Depends(require_session)]
 
@@ -18,3 +18,4 @@ api_router.include_router(system.public_router)
 api_router.include_router(auth.router)
 api_router.include_router(system.router, dependencies=GUARDED)
 api_router.include_router(google.router, dependencies=GUARDED)
+api_router.include_router(evaluation.router, dependencies=GUARDED)
