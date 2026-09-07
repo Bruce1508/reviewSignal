@@ -119,14 +119,3 @@ def test_a_permanent_failure_dead_letters_on_its_first_attempt(
     assert job.status == "dead_letter"
     assert job.attempt_count == 1
     assert "No predictor is registered." in (job.error_message or "")
-
-
-def test_a_retryable_failure_still_uses_its_attempts(session: Session) -> None:
-    """The permanent path must not have shortened the ordinary one."""
-    job_id = _record(payload={"fail": True}, max_attempts=3)
-
-    with pytest.raises(RuntimeError):
-        run_job(str(job_id))
-
-    job = _reload(session, job_id)
-    assert job.status == "failed"

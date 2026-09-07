@@ -89,14 +89,21 @@ def _record_failure(
         job.status = "dead_letter" if exhausted else "failed"
         job.finished_at = _now()
         job.error_message = f"{type(exc).__name__}: {exc}"
-    logger.warning(
-        "Job %s failed on attempt %s/%s%s",
-        key,
-        attempt,
-        max_attempts,
+    outcome = (
         " — moved to dead_letter, permanently"
         if permanent
         else " — moved to dead_letter"
         if exhausted
-        else "",
+        else ""
+    )
+    # The permanent path does not re-raise, so RQ never writes a traceback for it and
+    # this line is the only account of the failure outside `jobs.error_message`.
+    logger.warning(
+        "Job %s failed on attempt %s/%s%s: %s",
+        key,
+        attempt,
+        max_attempts,
+        outcome,
+        exc,
+        exc_info=permanent,
     )
