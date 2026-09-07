@@ -21,9 +21,7 @@ class HealthService:
         redis = await self._probe_redis()
 
         unhealthy = [
-            name
-            for name, state in (("database", database), ("redis", redis))
-            if state != OK
+            name for name, state in (("database", database), ("redis", redis)) if state != OK
         ]
         payload = HealthPayload(
             status=OK if not unhealthy else "degraded",

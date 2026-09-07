@@ -74,6 +74,9 @@ def _record_failure(key: uuid.UUID, exc: Exception, attempt: int, max_attempts: 
         job.finished_at = _now()
         job.error_message = f"{type(exc).__name__}: {exc}"
     logger.warning(
-        "Job %s failed on attempt %s/%s%s", key, attempt, max_attempts,
+        "Job %s failed on attempt %s/%s%s",
+        key,
+        attempt,
+        max_attempts,
         " — moved to dead_letter" if exhausted else "",
     )

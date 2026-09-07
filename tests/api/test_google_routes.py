@@ -373,14 +373,10 @@ async def test_selecting_a_location_keeps_the_stored_tokens(client: AsyncClient)
     """Selection must not disturb the grant; re-authorizing to change location is wrong."""
     ciphertext = _insert_connected_credential()
 
-    await client.post(
-        "/api/v1/google/location", json={"account_id": "111", "location_id": "222"}
-    )
+    await client.post("/api/v1/google/location", json={"account_id": "111", "location_id": "222"})
 
     with session_scope() as session:
-        row = session.execute(
-            text("SELECT refresh_token_encrypted FROM source_credentials")
-        ).one()
+        row = session.execute(text("SELECT refresh_token_encrypted FROM source_credentials")).one()
     assert bytes(row.refresh_token_encrypted) == ciphertext
 
 

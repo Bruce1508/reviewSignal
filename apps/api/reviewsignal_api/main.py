@@ -24,9 +24,7 @@ def create_app() -> FastAPI:
 def _register_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(DomainError)
     async def _domain_error(_: Request, exc: DomainError) -> JSONResponse:
-        return JSONResponse(
-            status_code=exc.status_code, content=error_body(exc.code, exc.message)
-        )
+        return JSONResponse(status_code=exc.status_code, content=error_body(exc.code, exc.message))
 
     @app.exception_handler(RequestValidationError)
     async def _validation_error(_: Request, exc: RequestValidationError) -> JSONResponse:

@@ -3,7 +3,7 @@
 
 WEB := apps/web
 
-.PHONY: help install up down logs migrate revision api worker web check lint citations typecheck test test-py test-web
+.PHONY: help install up down logs migrate revision api worker web check format lint citations typecheck test test-py test-web
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  %-12s %s\n", $$1, $$2}'
@@ -36,8 +36,12 @@ worker: ## Run the RQ worker
 web: ## Run the Next.js dev server
 	cd $(WEB) && npm run dev
 
+format: ## Format Python
+	uv run ruff format .
+
 lint: ## Lint Python and web
 	uv run ruff check .
+	uv run ruff format --check .
 	uv run python -m tools.check_citations
 	cd $(WEB) && npm run lint
 

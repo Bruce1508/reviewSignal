@@ -490,9 +490,7 @@ class SourceCredential(Base):
 
     id: Mapped[uuid.UUID] = _pk()
     source: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
-    status: Mapped[str] = mapped_column(
-        String(32), nullable=False, server_default="disconnected"
-    )
+    status: Mapped[str] = mapped_column(String(32), nullable=False, server_default="disconnected")
     account_id: Mapped[str | None] = mapped_column(String(255))
     location_id: Mapped[str | None] = mapped_column(String(255))
     access_token_encrypted: Mapped[bytes | None] = mapped_column(LargeBinary)
