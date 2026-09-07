@@ -138,12 +138,24 @@ def test_a_section_the_document_does_not_have_is_broken() -> None:
     assert [c.section for c in report.broken] == ["99"]
 
 
-def test_a_document_that_is_not_on_disk_is_skipped_not_failed() -> None:
-    """`docs/PRD.md` is gitignored, so a clean checkout must still pass."""
+def test_a_gitignored_document_is_exempt_not_counted_as_checked() -> None:
+    """`docs/PRD.md` is gitignored, so a clean checkout must still pass — but its
+    citations are named as exempt rather than counted among the verified ones."""
     report = resolve(parse_citations("(`PRD.md` §3.1)"), DOCS)
 
-    assert [c.section for c in report.skipped] == ["3.1"]
+    assert [c.section for c in report.exempt] == ["3.1"]
+    assert not report.ok
+    assert not report.skipped
     assert not report.broken
+
+
+def test_a_document_that_is_neither_on_disk_nor_exempt_is_skipped() -> None:
+    """Where a misspelled document name lands. It does not fail the gate, but it must
+    not hide inside the exempt count either, or a typo reads as a policy decision."""
+    report = resolve(parse_citations("(`datamodel.md` §3)"), DOCS)
+
+    assert [c.section for c in report.skipped] == ["3"]
+    assert not report.exempt
 
 
 def test_an_unattributed_citation_is_reported_separately() -> None:
@@ -157,6 +169,7 @@ def test_a_report_fails_on_broken_or_unattributed_only() -> None:
     assert resolve(parse_citations("(`evaluation.md` §99)"), DOCS).failed is True
     assert resolve(parse_citations("which §19 requires"), DOCS).failed is True
     assert resolve(parse_citations("(`PRD.md` §1)"), DOCS).failed is False
+    assert resolve(parse_citations("(`datamodel.md` §1)"), DOCS).failed is False
 
 
 # --- Rule 4: the repository itself is clean ----------------------------------
@@ -165,11 +178,14 @@ def test_a_report_fails_on_broken_or_unattributed_only() -> None:
 def test_every_citation_in_the_repository_resolves() -> None:
     report, documents = check(Path(__file__).resolve().parents[2])
 
-    # `resolve` files a citation whose document is missing under `skipped`, and `failed`
-    # ignores `skipped`. So an unreadable `docs/` leaves every assertion below true while
-    # nothing was checked at all: proven by running `check` on a tree with no `docs/`,
-    # which reported 162 skipped, 0 broken, and exited 0. These two lines pin that shut.
+    # `resolve` files a citation whose document is missing under `exempt` or `skipped`,
+    # and `failed` ignores both. So an unreadable `docs/` leaves every assertion below
+    # true while nothing was checked at all: proven by running `check` on a tree with no
+    # `docs/`, which reported 162 skipped, 0 broken, and exited 0. These pin that shut.
     assert "evaluation.md" in documents, "docs/ did not parse; every citation would skip"
     assert len(report.ok) > 100, "almost nothing resolved; check the file globs"
+    # Nothing may sit in `skipped`: every document cited either parses or is exempt by
+    # policy. A misspelled document name shows up here and nowhere else.
+    assert report.skipped == [], f"unknown documents cited: {report.skipped}"
     assert report.broken == [], f"broken citations: {report.broken}"
     assert report.unattributed == [], f"unattributed citations: {report.unattributed}"

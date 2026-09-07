@@ -6,8 +6,13 @@ that had moved. This walks the source, attributes each `§N` to a document, and 
 section up in that document's headings.
 
 Two failure modes are hard errors: a section the document does not have, and a `§N` that
-names no document at all. A citation to a document that is not on disk is skipped rather
-than failed, because `docs/PRD.md` is gitignored and a clean checkout must still pass.
+names no document at all. Neither is affected by what follows.
+
+`docs/PRD.md` is gitignored, so no clean checkout can verify its citations. Those are
+reported as `exempt`, not folded into `ok` or `skipped`: the headline count must never
+imply the top source of truth was checked when it could not be. Any other document that
+is not on disk is `skipped`, which does not fail the gate but is printed, because at that
+point the likeliest cause is a misspelled document name.
 """
 
 import re
@@ -25,6 +30,11 @@ SOURCE_GLOBS = (
 
 # This linter's own test fixtures contain deliberately broken citations.
 EXCLUDED = ("tests/tools/test_check_citations.py",)
+
+# Documents deliberately absent from a clean checkout. Citations to these are reported
+# as exempt rather than counted as verified. Keep this list as short as the .gitignore
+# makes necessary: every entry is a document the gate cannot check.
+EXEMPT_DOCUMENTS = ("PRD.md",)
 
 _SECTION = re.compile(r"§(\d+(?:\.\d+)*)")
 _DOCUMENT = re.compile(r"([A-Za-z0-9_-]+\.md)")
@@ -58,12 +68,19 @@ class Citation:
 class Report:
     ok: list[Citation] = field(default_factory=list)
     broken: list[Citation] = field(default_factory=list)
+    exempt: list[Citation] = field(default_factory=list)
     skipped: list[Citation] = field(default_factory=list)
     unattributed: list[Citation] = field(default_factory=list)
 
     @property
     def total(self) -> int:
-        return len(self.ok) + len(self.broken) + len(self.skipped) + len(self.unattributed)
+        return (
+            len(self.ok)
+            + len(self.broken)
+            + len(self.exempt)
+            + len(self.skipped)
+            + len(self.unattributed)
+        )
 
     @property
     def failed(self) -> bool:
@@ -122,13 +139,14 @@ def section_titles(markdown: str) -> dict[str, str]:
 
 
 def resolve(citations: list[Citation], documents: Documents) -> Report:
-    """Sort citations into ok, broken, skipped and unattributed."""
+    """Sort citations into ok, broken, exempt, skipped and unattributed."""
     report = Report()
     for citation in citations:
         if citation.document is None:
             report.unattributed.append(citation)
         elif citation.document not in documents:
-            report.skipped.append(citation)
+            exempted = citation.document in EXEMPT_DOCUMENTS
+            (report.exempt if exempted else report.skipped).append(citation)
         elif citation.section not in documents[citation.document]:
             report.broken.append(citation)
         else:
@@ -166,14 +184,16 @@ def main(argv: list[str] | None = None) -> int:
         for citation in report.ok:
             title = documents[citation.document or ""][citation.section]
             print(f"{citation}  ->  {title!r}")
-        for citation in report.skipped:
-            print(f"{citation}  ->  skipped, {citation.document} not on disk")
+        for citation in report.exempt:
+            print(f"{citation}  ->  exempt, {citation.document} is gitignored")
 
     print(
         f"citations: {report.total} checked, {len(report.ok)} ok, "
-        f"{len(report.skipped)} skipped, {len(report.broken)} broken, "
-        f"{len(report.unattributed)} unattributed"
+        f"{len(report.exempt)} exempt, {len(report.skipped)} skipped, "
+        f"{len(report.broken)} broken, {len(report.unattributed)} unattributed"
     )
+    for citation in report.skipped:
+        print(f"  SKIPPED      {citation}  -> not on disk and not exempt; check the name")
     for citation in report.broken:
         print(f"  BROKEN       {citation}  -> no such section")
     for citation in report.unattributed:
