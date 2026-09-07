@@ -1,7 +1,10 @@
-"""Runs a benchmark through a predictor and scores it (`docs/evaluation.md` §35).
+"""Runs a benchmark through a predictor and scores it.
 
-One pass over the dataset produces all three metric families, because sentiment and
-calibration both depend on which categories the predictor got right.
+One pass produces all three metric families (`docs/evaluation.md` §5, §7, §9),
+because sentiment and calibration both depend on which categories the predictor
+got right: sentiment is scored only on categories present in both gold and
+prediction, and a prediction counts as calibrated-correct only when its category
+and its sentiment are both right.
 """
 
 from collections.abc import Sequence
