@@ -12,6 +12,8 @@ import logging
 import uuid
 from pathlib import Path
 
+from sqlalchemy.exc import IntegrityError
+
 from reviewsignal_api.ai.evaluation.dataset import load_benchmark
 from reviewsignal_api.ai.evaluation.registry import get_predictor
 from reviewsignal_api.ai.evaluation.runner import run_evaluation
@@ -54,7 +56,20 @@ def evaluation_run(payload: dict, job_id: uuid.UUID) -> None:
         raise PermanentJobError("No benchmark is configured; set BENCHMARK_PATH.")
 
     result = run_evaluation(load_benchmark(Path(path)), predictor)
-    with session_scope() as session:
-        EvaluationRunRepository(session).record(
-            result, evaluation_type=evaluation_type, job_id=job_id
-        )
+    try:
+        with session_scope() as session:
+            EvaluationRunRepository(session).record(
+                result, evaluation_type=evaluation_type, job_id=job_id
+            )
+    except IntegrityError:
+        # A concurrent attempt committed this job's run between the guard above and this
+        # insert, so `uq_evaluation_runs_job_id` refused the second row. That is the
+        # constraint working, not a failed evaluation: raising here would dead-letter a
+        # job whose work is committed and complete, the false alarm that then costs a
+        # manual requeue (`docs/architecture.md` §13).
+        # Proving the run exists, rather than matching on the constraint name, keeps an
+        # unrelated violation — an orphan `job_id` against the foreign key — failing.
+        with session_scope() as session:
+            if not EvaluationRunRepository(session).already_recorded(job_id):
+                raise
+        logger.info("Job %s: its evaluation run was committed by a concurrent attempt.", job_id)
