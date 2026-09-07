@@ -26,6 +26,7 @@ class EvaluationRunSummary(BaseModel):
     evaluation_type: str
     model_name: str
     model_version: str | None
+    prompt_version: str | None
     taxonomy_version: str | None
     dataset_version: str
     created_at: datetime

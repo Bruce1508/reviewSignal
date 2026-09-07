@@ -67,6 +67,7 @@ class StubPredictor:
 
     name = "stub-classifier"
     version = "v1"
+    prompt_version = "prompt-v1"
 
     def __init__(self, predictions: dict[str, list[PredictedAspect]]) -> None:
         self._predictions = predictions
@@ -90,6 +91,7 @@ def test_the_result_carries_the_dataset_and_model_identity() -> None:
     assert result.taxonomy_version == "tax-1"
     assert result.model_name == "stub-classifier"
     assert result.model_version == "v1"
+    assert result.prompt_version == "prompt-v1"
 
 
 # --- Rule 2: classification is scored over all items -----------------------

@@ -32,6 +32,7 @@ class EvaluationResult:
     taxonomy_version: str | None
     model_name: str
     model_version: str | None
+    prompt_version: str | None
     classification: ClassificationMetrics
     # Absent rather than zero when the run produced nothing to score.
     sentiment: SentimentMetrics | None
@@ -89,6 +90,7 @@ def run_evaluation(dataset: BenchmarkDataset, predictor: Predictor) -> Evaluatio
         taxonomy_version=dataset.taxonomy_version,
         model_name=predictor.name,
         model_version=predictor.version,
+        prompt_version=predictor.prompt_version,
         classification=classification_metrics(dataset.gold_categories, predicted_categories),
         sentiment=sentiment_metrics(gold_sentiments, predicted_sentiments)
         if gold_sentiments

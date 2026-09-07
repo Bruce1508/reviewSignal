@@ -49,6 +49,7 @@ class StubPredictor:
 
     name = "stub-classifier"
     version = "v0"
+    prompt_version = None
 
     def predict(self, item: object) -> list[PredictedAspect]:
         return [PredictedAspect(category_id="cat-a", sentiment="positive", confidence=0.9)]

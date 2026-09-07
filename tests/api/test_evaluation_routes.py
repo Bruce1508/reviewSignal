@@ -193,6 +193,7 @@ class _StubPredictor:
 
     name = "stub-classifier"
     version = "v0"
+    prompt_version = None
 
     def predict(self, item: object) -> list[PredictedAspect]:
         return []

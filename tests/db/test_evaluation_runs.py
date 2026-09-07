@@ -12,12 +12,18 @@ from reviewsignal_api.db.models import EvaluationRun, Job, TaxonomyVersion
 from reviewsignal_api.repositories.evaluation_runs import EvaluationRunRepository
 
 
-def make_result(*, full: bool = False, taxonomy_version: str | None = None) -> EvaluationResult:
+def make_result(
+    *,
+    full: bool = False,
+    taxonomy_version: str | None = None,
+    prompt_version: str | None = None,
+) -> EvaluationResult:
     return EvaluationResult(
         dataset_version="v0-synthetic",
         taxonomy_version=taxonomy_version,
         model_name="stub-classifier",
         model_version="v1",
+        prompt_version=prompt_version,
         classification=classification_metrics([{"wait_time"}, {"pricing"}], [{"wait_time"}, set()]),
         sentiment=sentiment_metrics(["positive"], ["negative"]) if full else None,
         calibration=calibration_metrics([0.8], [True]) if full else None,
@@ -39,6 +45,25 @@ def test_record_persists_the_run_identity(session: Session) -> None:
     assert stored.model_version == "v1"
     assert stored.dataset_version == "v0-synthetic"
     assert stored.created_at is not None
+
+
+def test_a_prompted_run_records_the_prompt_it_scored(session: Session) -> None:
+    """`evaluation.md` §30. Without this column a prompted classifier's run cannot name
+    the prompt it scored, so `evaluation.md` §23 could not attribute a regression to a
+    prompt change rather than to the model."""
+    run = EvaluationRunRepository(session).record(
+        make_result(prompt_version="classify-v3"), evaluation_type="classification"
+    )
+
+    assert reread(session, run).prompt_version == "classify-v3"
+
+
+def test_an_unprompted_run_records_no_prompt_version(session: Session) -> None:
+    """NULL, not an empty string: a workflow that runs no prompt must stay
+    distinguishable from one whose prompt was not reported."""
+    run = EvaluationRunRepository(session).record(make_result(), evaluation_type="classification")
+
+    assert reread(session, run).prompt_version is None
 
 
 def test_metrics_round_trip_through_jsonb(session: Session) -> None:
