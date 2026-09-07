@@ -107,7 +107,7 @@ def test_a_permanent_failure_dead_letters_on_its_first_attempt(
     (`docs/architecture.md` §13). `run_job` must not re-raise either: raising hands
     the job back to RQ, which would run the identical failure twice more."""
 
-    def permanently_broken(payload: dict) -> None:
+    def permanently_broken(payload: dict, job_id: uuid.UUID) -> None:
         raise PermanentJobError("No predictor is registered.")
 
     monkeypatch.setitem(HANDLERS, "permanently_broken", permanently_broken)

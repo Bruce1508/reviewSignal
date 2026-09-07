@@ -6,6 +6,7 @@ still refuses when the selection is missing, and that selecting one actually rel
 it — the reason `/google/location` exists.
 """
 
+import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
@@ -87,7 +88,7 @@ def test_ingest_refuses_when_no_location_is_selected(
     _insert_credential(account_id, location_id)
 
     with pytest.raises(SourceNotConnectedError, match="account/location"):
-        ingest.google_backfill({})
+        ingest.google_backfill({}, uuid.uuid4())
 
     assert stubbed_ingest["ran"] == [], "ingestion started without a target location"
 
@@ -95,7 +96,7 @@ def test_ingest_refuses_when_no_location_is_selected(
 def test_backfill_runs_once_a_location_is_selected(stubbed_ingest: dict) -> None:
     _insert_credential("111", "222")
 
-    ingest.google_backfill({})
+    ingest.google_backfill({}, uuid.uuid4())
 
     assert stubbed_ingest["ran"] == ["backfill"]
     assert stubbed_ingest["account_id"] == "111"
@@ -105,6 +106,6 @@ def test_backfill_runs_once_a_location_is_selected(stubbed_ingest: dict) -> None
 def test_sync_runs_once_a_location_is_selected(stubbed_ingest: dict) -> None:
     _insert_credential("111", "222")
 
-    ingest.google_sync({})
+    ingest.google_sync({}, uuid.uuid4())
 
     assert stubbed_ingest["ran"] == ["incremental"]

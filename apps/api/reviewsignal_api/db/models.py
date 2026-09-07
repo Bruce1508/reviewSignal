@@ -440,6 +440,11 @@ class EvaluationRun(Base):
     __tablename__ = "evaluation_runs"
 
     id: Mapped[uuid.UUID] = _pk()
+    # The job that produced this run. Unique, so a retried job cannot add a second
+    # row to the history; NULL for a run recorded outside the queue.
+    job_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("jobs.id"), unique=True
+    )
     evaluation_type: Mapped[str] = mapped_column(String(64), nullable=False)
     model_name: Mapped[str] = mapped_column(String(128), nullable=False)
     model_version: Mapped[str | None] = mapped_column(String(64))

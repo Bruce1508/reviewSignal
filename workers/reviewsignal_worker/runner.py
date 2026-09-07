@@ -45,7 +45,7 @@ def run_job(job_id: str) -> None:
 
     try:
         handler = _resolve(job_type)
-        handler(payload)
+        handler(payload, key)
     except PermanentJobError as exc:
         # Deliberately not re-raised: raising hands the job back to RQ, which would
         # run the identical failure twice more before reaching the dead letter this
@@ -67,7 +67,7 @@ def _record_success(key: uuid.UUID) -> None:
             job.error_message = None
 
 
-def _resolve(job_type: str) -> Callable[[dict], None]:
+def _resolve(job_type: str) -> Callable[[dict, uuid.UUID], None]:
     handler = HANDLERS.get(job_type)
     if handler is None:
         raise LookupError(f"No handler registered for job type '{job_type}'.")
