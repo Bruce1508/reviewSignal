@@ -163,8 +163,13 @@ def test_a_report_fails_on_broken_or_unattributed_only() -> None:
 
 
 def test_every_citation_in_the_repository_resolves() -> None:
-    report, _ = check(Path(__file__).resolve().parents[2])
+    report, documents = check(Path(__file__).resolve().parents[2])
 
-    assert report.total > 100, "the walker found almost nothing; check its file globs"
+    # `resolve` files a citation whose document is missing under `skipped`, and `failed`
+    # ignores `skipped`. So an unreadable `docs/` leaves every assertion below true while
+    # nothing was checked at all: proven by running `check` on a tree with no `docs/`,
+    # which reported 162 skipped, 0 broken, and exited 0. These two lines pin that shut.
+    assert "evaluation.md" in documents, "docs/ did not parse; every citation would skip"
+    assert len(report.ok) > 100, "almost nothing resolved; check the file globs"
     assert report.broken == [], f"broken citations: {report.broken}"
     assert report.unattributed == [], f"unattributed citations: {report.unattributed}"
