@@ -21,6 +21,10 @@ node_modules/
 out/
 *.tsbuildinfo
 
+# Agent worktrees: throwaway repo copies created by subagent isolation. Untracked,
+# so ruff would otherwise scan them and the format gate would fail on foreign trees.
+/.claude/worktrees/
+
 # Tooling
 .coverage
 htmlcov/
