@@ -8,6 +8,7 @@ guard is repeated here because the API and the RQ worker are separate processes 
 can be running skewed code.
 """
 
+import logging
 import uuid
 from pathlib import Path
 
@@ -18,6 +19,8 @@ from reviewsignal_api.core.config import get_settings
 from reviewsignal_api.repositories.evaluation_runs import EvaluationRunRepository
 from reviewsignal_worker.db import session_scope
 from reviewsignal_worker.errors import PermanentJobError
+
+logger = logging.getLogger(__name__)
 
 
 def benchmark_path() -> str:
@@ -32,6 +35,10 @@ def evaluation_run(payload: dict, job_id: uuid.UUID) -> None:
         if EvaluationRunRepository(session).already_recorded(job_id):
             # A retry that got past the run being committed. Re-scoring would add a
             # second baseline to the history, so this attempt has nothing left to do.
+            # Logged because the guard firing is itself the signal: a prior attempt
+            # committed and then failed, and `_record_success` clears `error_message`,
+            # so without this line nothing records that anything went wrong.
+            logger.info("Job %s already recorded its evaluation run; skipping.", job_id)
             return
 
     predictor = get_predictor(evaluation_type)
