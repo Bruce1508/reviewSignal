@@ -5,6 +5,7 @@ request before queueing otherwise. These tests register a stub so the recorded s
 still pinned down now, rather than after a real classifier lands.
 """
 
+import itertools
 import json
 import uuid
 from collections.abc import Iterator
@@ -12,10 +13,12 @@ from pathlib import Path
 
 import pytest
 from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
 
 from reviewsignal_api.ai.evaluation.protocols import PredictedAspect
 from reviewsignal_api.ai.evaluation.registry import PREDICTORS
 from reviewsignal_api.db.models import EvaluationRun, Job
+from reviewsignal_api.repositories.evaluation_runs import EvaluationRunRepository
 from reviewsignal_worker.db import session_scope
 from reviewsignal_worker.errors import PermanentJobError
 from reviewsignal_worker.jobs import HANDLERS
@@ -171,3 +174,46 @@ def test_a_separate_job_records_its_own_run(
 
     with session_scope() as session:
         assert session.query(EvaluationRun).count() == 2
+
+
+def test_a_concurrent_attempt_losing_the_insert_race_is_not_a_failure(
+    monkeypatch: pytest.MonkeyPatch, benchmark_file: Path, registered_predictor: None
+) -> None:
+    """Two workers on one job both pass the guard, both score, and the second insert
+    violates `uq_evaluation_runs_job_id`. Failing there dead-letters a job whose work is
+    committed and complete — the false operational alarm `docs/architecture.md` §13 both
+    warns about and makes expensive, since it requires manual requeue."""
+    _configure_benchmark(monkeypatch, benchmark_file)
+    job_id = _queued_job()
+    evaluation_run({"evaluation_type": "classification"}, job_id)
+
+    # The losing worker read the guard before the winner committed, then sees the row
+    # once it re-reads: stale for that first call only, honest afterwards.
+    real = EvaluationRunRepository.already_recorded
+    reads = itertools.count()
+
+    def stale_on_the_first_read(self: EvaluationRunRepository, job_id: uuid.UUID) -> bool:
+        return False if next(reads) == 0 else real(self, job_id)
+
+    monkeypatch.setattr(EvaluationRunRepository, "already_recorded", stale_on_the_first_read)
+
+    evaluation_run({"evaluation_type": "classification"}, job_id)
+
+    with session_scope() as session:
+        rows = session.query(EvaluationRun).all()
+        assert len(rows) == 1
+        assert rows[0].job_id == job_id
+
+
+def test_an_integrity_error_that_is_not_the_race_still_fails_the_job(
+    monkeypatch: pytest.MonkeyPatch, benchmark_file: Path, registered_predictor: None
+) -> None:
+    """The race is absorbed by proving the run exists, not by trusting the error type.
+    An orphan `job_id` violates the foreign key instead, and must still surface."""
+    _configure_benchmark(monkeypatch, benchmark_file)
+
+    with pytest.raises(IntegrityError):
+        evaluation_run({"evaluation_type": "classification"}, uuid.uuid4())
+
+    with session_scope() as session:
+        assert session.query(EvaluationRun).count() == 0
