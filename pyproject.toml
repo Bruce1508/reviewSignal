@@ -41,7 +41,9 @@ src = ["apps/api", "workers", "tests", "tools"]
 select = ["E", "F", "I", "UP", "B", "SIM", "TID"]
 
 [tool.ruff.lint.per-file-ignores]
-# Alembic writes these; reformatting them fights the generator on every revision.
+# Generated revisions are formatted by the alembic.ini post-write hook, but ruff
+# cannot split the long string literals autogenerate emits (server defaults,
+# constraint names).
 "migrations/versions/*" = ["E501"]
 
 [tool.pyright]
