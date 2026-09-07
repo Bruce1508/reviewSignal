@@ -21,9 +21,7 @@ export interface ApiError {
 /**
  * A discriminated union, so callers cannot read `data` without ruling out `error` first.
  */
-export type ApiResponse<T> =
-  | { data: T; error: null }
-  | { data: null; error: ApiError };
+export type ApiResponse<T> = { data: T; error: null } | { data: null; error: ApiError };
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api/v1";
 
