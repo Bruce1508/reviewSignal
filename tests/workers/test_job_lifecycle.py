@@ -12,6 +12,8 @@ from sqlalchemy.orm import Session
 
 from reviewsignal_api.db.models import Job
 from reviewsignal_worker.db import session_scope
+from reviewsignal_worker.errors import PermanentJobError
+from reviewsignal_worker.jobs import HANDLERS
 from reviewsignal_worker.runner import run_job
 
 
@@ -96,3 +98,24 @@ def test_unknown_job_type_fails_the_job_rather_than_crashing_silently(session: S
 
 def test_missing_job_record_is_a_no_op(session: Session) -> None:
     run_job(str(uuid.uuid4()))
+
+
+def test_a_permanent_failure_dead_letters_on_its_first_attempt(
+    session: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """No retry could change this outcome, so the backoff schedule is skipped
+    (`docs/architecture.md` §13). `run_job` must not re-raise either: raising hands
+    the job back to RQ, which would run the identical failure twice more."""
+
+    def permanently_broken(payload: dict) -> None:
+        raise PermanentJobError("No predictor is registered.")
+
+    monkeypatch.setitem(HANDLERS, "permanently_broken", permanently_broken)
+    job_id = _record(job_type="permanently_broken", max_attempts=3)
+
+    run_job(str(job_id))
+
+    job = _reload(session, job_id)
+    assert job.status == "dead_letter"
+    assert job.attempt_count == 1
+    assert "No predictor is registered." in (job.error_message or "")

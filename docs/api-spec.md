@@ -178,8 +178,11 @@ Queues benchmark evaluation.
 ```
 `evaluation_type` names the workflow to evaluate, not a metric family: one run records
 one `evaluation_runs` row holding every family it produced (`data-model.md` §16).
-Returns `MODEL_UNAVAILABLE` when no predictor is registered for that workflow, so no job
-is queued that cannot succeed.
+`evaluation_type` must be one of the workflows `data-model.md` §16 names; anything else
+is `VALIDATION_ERROR`, because a workflow that does not exist is a malformed request
+rather than a model that is temporarily down.
+Returns `MODEL_UNAVAILABLE` when the workflow is known but no predictor is registered
+for it, so no job is queued that cannot succeed.
 
 These endpoints exist before the evaluation dashboard, which `PRD.md` places in Phase 3.
 

@@ -14,9 +14,9 @@ from reviewsignal_api.ai.evaluation.dataset import load_benchmark
 from reviewsignal_api.ai.evaluation.registry import get_predictor
 from reviewsignal_api.ai.evaluation.runner import run_evaluation
 from reviewsignal_api.core.config import get_settings
-from reviewsignal_api.core.errors import ModelUnavailableError
 from reviewsignal_api.repositories.evaluation_runs import EvaluationRunRepository
 from reviewsignal_worker.db import session_scope
+from reviewsignal_worker.errors import PermanentJobError
 
 
 def benchmark_path() -> str:
@@ -29,7 +29,7 @@ def evaluation_run(payload: dict) -> None:
 
     predictor = get_predictor(evaluation_type)
     if predictor is None:
-        raise ModelUnavailableError(
+        raise PermanentJobError(
             f"No predictor is registered for evaluation type {evaluation_type!r}."
         )
 
@@ -37,7 +37,7 @@ def evaluation_run(payload: dict) -> None:
     if not path:
         # Failing is the point: scoring the synthetic placeholder would write a row
         # that looks like a result (`data/benchmarks/v0-synthetic.json` forbids it).
-        raise ValueError("No benchmark is configured; set BENCHMARK_PATH.")
+        raise PermanentJobError("No benchmark is configured; set BENCHMARK_PATH.")
 
     result = run_evaluation(load_benchmark(Path(path)), predictor)
     with session_scope() as session:

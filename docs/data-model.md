@@ -245,6 +245,8 @@ created_at TIMESTAMPTZ
 `evaluation_type` names the workflow evaluated — `classification` today, and later `taxonomy`, `anomaly`, or `recommendation`. One run records one row: every metric family that pass produced (classification, sentiment, calibration) is nested inside `metrics`, and a family it could not measure is stored as null (`evaluation.md` §30).
 `taxonomy_version_id` links a run to a stored taxonomy; `taxonomy_version` is the version string the benchmark was labelled against, kept so a run still names its taxonomy when no `taxonomy_versions` row exists (`evaluation.md` §30).
 
+**Unresolved:** `evaluation.md` §30 lists `prompt_version` among the fields a run record stores, and this table has no such column. Phase 0 ships no prompted predictor, so nothing can populate it yet, and adding it means extending the `Predictor` protocol to report a prompt version. Recorded here rather than resolved silently: either this table gains the column, or §30 narrows the requirement to prompted workflows. Until then a prompted classifier's run cannot name the prompt it scored, which blocks `evaluation.md` §23 regression comparison from attributing a change to a prompt.
+
 ## 17. `settings`
 ```text
 id UUID PK
