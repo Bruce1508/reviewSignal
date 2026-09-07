@@ -88,3 +88,28 @@ def test_a_succeeding_job_runs_once_through_the_queue(session: Session, rq_queue
     job = _reload(session, job_id)
     assert job.status == "succeeded"
     assert job.attempt_count == 1
+
+
+def test_a_permanent_failure_is_not_re_executed_by_the_queue(
+    session: Session, rq_queue: Queue, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """`run_job` swallows `PermanentJobError` so that RQ, seeing a normal return,
+    schedules no retry (`docs/architecture.md` §13). Every other test of that path calls
+    `run_job` directly, which cannot show what the queue does next — the swallow could
+    stop working and they would all still pass.
+
+    An unregistered predictor is the real permanent failure, so nothing is stubbed to
+    manufacture it.
+    """
+    monkeypatch.setattr(queue_module, "RETRY_BACKOFF_SECONDS", (0, 0, 0))
+
+    job_id = enqueue(
+        "evaluation_run", payload={"evaluation_type": "classification"}, max_attempts=3
+    )
+
+    SimpleWorker([rq_queue], connection=rq_queue.connection).work(burst=True)
+
+    job = _reload(session, job_id)
+    assert job.attempt_count == 1, "the queue re-executed a permanently failed job"
+    assert job.status == "dead_letter"
+    assert "PermanentJobError" in (job.error_message or "")

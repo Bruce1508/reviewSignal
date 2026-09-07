@@ -54,6 +54,18 @@ class StubPredictor:
         return [PredictedAspect(category_id="cat-a", sentiment="positive", confidence=0.9)]
 
 
+class CountingPredictor(StubPredictor):
+    """Counts the items it scored, so a retry that skipped the work can be told from one
+    that re-ran the benchmark and merely failed to write a second row."""
+
+    def __init__(self) -> None:
+        self.scored = 0
+
+    def predict(self, item: object) -> list[PredictedAspect]:
+        self.scored += 1
+        return super().predict(item)
+
+
 @pytest.fixture
 def benchmark_file(tmp_path: Path) -> Path:
     path = tmp_path / "benchmark.json"
@@ -161,6 +173,23 @@ def test_a_retried_job_does_not_record_a_second_run(
         rows = session.query(EvaluationRun).all()
         assert len(rows) == 1
         assert rows[0].job_id == job_id
+
+
+def test_a_retry_skips_the_scoring_and_not_only_the_write(
+    monkeypatch: pytest.MonkeyPatch, benchmark_file: Path
+) -> None:
+    """The row count alone cannot distinguish a guard that returned early from one that
+    re-scored the benchmark and lost the insert race. Scoring is the expensive half, and
+    the guard exists to skip it."""
+    _configure_benchmark(monkeypatch, benchmark_file)
+    predictor = CountingPredictor()
+    monkeypatch.setitem(PREDICTORS, "classification", predictor)
+    job_id = _queued_job()
+
+    evaluation_run({"evaluation_type": "classification"}, job_id)
+    evaluation_run({"evaluation_type": "classification"}, job_id)
+
+    assert predictor.scored == len(BENCHMARK["items"]), "the retry re-scored the benchmark"
 
 
 def test_a_separate_job_records_its_own_run(

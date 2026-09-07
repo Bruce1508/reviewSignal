@@ -119,3 +119,20 @@ def test_a_permanent_failure_dead_letters_on_its_first_attempt(
     assert job.status == "dead_letter"
     assert job.attempt_count == 1
     assert "No predictor is registered." in (job.error_message or "")
+
+
+def test_the_runner_hands_the_handler_its_own_payload_and_job_id(
+    session: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Handlers make their writes idempotent by keying on this id, so handing over the
+    wrong one would break every guard built on it while every lifecycle test above still
+    passed — none of them look at what the handler was called with."""
+    received: list[tuple[dict, uuid.UUID]] = []
+    monkeypatch.setitem(
+        HANDLERS, "noop", lambda payload, job_id: received.append((payload, job_id))
+    )
+    job_id = _record(payload={"marker": "for-this-job"})
+
+    run_job(str(job_id))
+
+    assert received == [({"marker": "for-this-job"}, job_id)]
