@@ -441,9 +441,11 @@ class EvaluationRun(Base):
 
     id: Mapped[uuid.UUID] = _pk()
     # The job that produced this run. Unique, so a retried job cannot add a second
-    # row to the history; NULL for a run recorded outside the queue.
+    # row to the history; NULL for a run recorded outside the queue, and set NULL
+    # again if that job is later pruned. `data-model.md` §24 requires keeping
+    # evaluation runs and does not list jobs, so the run must outlive its job.
     job_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("jobs.id"), unique=True
+        UUID(as_uuid=True), ForeignKey("jobs.id", ondelete="SET NULL"), unique=True
     )
     evaluation_type: Mapped[str] = mapped_column(String(64), nullable=False)
     model_name: Mapped[str] = mapped_column(String(128), nullable=False)

@@ -8,7 +8,7 @@ from reviewsignal_api.ai.evaluation.metrics.calibration import calibration_metri
 from reviewsignal_api.ai.evaluation.metrics.classification import classification_metrics
 from reviewsignal_api.ai.evaluation.metrics.sentiment import sentiment_metrics
 from reviewsignal_api.ai.evaluation.runner import EvaluationResult
-from reviewsignal_api.db.models import EvaluationRun, TaxonomyVersion
+from reviewsignal_api.db.models import EvaluationRun, Job, TaxonomyVersion
 from reviewsignal_api.repositories.evaluation_runs import EvaluationRunRepository
 
 
@@ -150,3 +150,21 @@ def test_each_record_creates_a_distinct_run(session: Session) -> None:
     session.flush()
     assert first.id != second.id
     assert isinstance(first.id, uuid.UUID)
+
+
+def test_pruning_a_job_keeps_its_run_and_only_clears_the_link(session: Session) -> None:
+    """`docs/data-model.md` §24 requires retaining evaluation runs and does not list
+    jobs, so jobs are prunable and a run has to outlive the job that produced it.
+    Without `ON DELETE SET NULL` the delete fails instead, making jobs unprunable."""
+    job = Job(job_type="evaluation_run", status="succeeded", payload={}, max_attempts=3)
+    session.add(job)
+    session.flush()
+    run = EvaluationRunRepository(session).record(
+        make_result(), evaluation_type="classification", job_id=job.id
+    )
+
+    session.delete(job)
+
+    stored = reread(session, run)
+    assert stored is not None
+    assert stored.job_id is None
