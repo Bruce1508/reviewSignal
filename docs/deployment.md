@@ -131,7 +131,8 @@ git push
 → restart containers
 → health check
 ```
-GitHub Actions can automate this later.
+Deployment is still manual. GitHub Actions runs the `make check` gate on every pull
+request and on `main` (`.github/workflows/check.yml`), but it does not deploy.
 
 ## 18. Database Migrations
 Use Alembic. Production order: backup/check → migrate → start API/worker → health check. Never edit production schema manually.
