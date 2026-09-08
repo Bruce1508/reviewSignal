@@ -8,9 +8,22 @@ on:
   push:
     branches: [main]
 
+# The gate reads the repository and runs tests. It never writes back, so the
+# default token permissions are wider than anything here needs.
+permissions:
+  contents: read
+
+# A new push to the same ref supersedes the run it interrupted.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check:
     runs-on: ubuntu-latest
+    # The whole gate takes ~90s. Twenty minutes is generous headroom and still
+    # fails fast on a job wedged against an unreachable service.
+    timeout-minutes: 20
 
     services:
       postgres:
@@ -37,24 +50,16 @@ jobs:
           --health-timeout 3s
           --health-retries 10
 
-    env:
-      # Throwaway values for throwaway containers — none of this is a secret,
-      # and none of it decrypts anything that exists outside this job.
-      DATABASE_URL: postgresql+psycopg://reviewsignal:reviewsignal@localhost:5432/reviewsignal
-      REDIS_URL: redis://localhost:6379/0
-      SESSION_SECRET: ci-not-a-real-secret
-      # Required despite defaulting to "" in `Settings`: core/crypto.py raises
-      # EncryptionKeyMissingError on an empty key, so the 20 tests that store a
-      # credential need a syntactically valid Fernet key, not merely a set one.
-      CREDENTIAL_ENCRYPTION_KEY: 8KQr2w9z_sX_-MFnpxPpsb_3WzcTg0LjWUDw15ryFiE=
-
     steps:
       - uses: actions/checkout@v4
 
+      # 3.12 is what ruff targets (`target-version = "py312"`) and what pyright
+      # analyses against. Testing on a newer interpreter than the type checker
+      # models would split the gate against itself.
       - name: Install uv and Python
         uses: astral-sh/setup-uv@v5
         with:
-          python-version: "3.13"
+          python-version: "3.12"
           enable-cache: true
 
       - name: Install Node
@@ -73,8 +78,28 @@ jobs:
 
       # Setup, not part of the gate: tests/conftest.py truncates tables but
       # never creates them, so the schema must already exist.
+      #
+      # The environment is set per step rather than per job so that checkout,
+      # the toolchain actions, and every npm lifecycle script run by `npm ci`
+      # never see these values.
       - name: Apply migrations
+        env:
+          DATABASE_URL: postgresql+psycopg://reviewsignal:reviewsignal@localhost:5432/reviewsignal
+          REDIS_URL: redis://localhost:6379/0
+          SESSION_SECRET: ci-not-a-real-secret
+          CREDENTIAL_ENCRYPTION_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
         run: make migrate
 
+      # CREDENTIAL_ENCRYPTION_KEY is required despite defaulting to "" in
+      # `Settings`: core/crypto.py raises EncryptionKeyMissingError on an empty
+      # key, so the tests that store a credential need a *valid* key, not merely
+      # a set one. The value is 32 zero bytes — accepted by Fernet, and visibly
+      # not something to copy into a real .env. Generate real keys with the
+      # command in .env.example.
       - name: Run the gate
+        env:
+          DATABASE_URL: postgresql+psycopg://reviewsignal:reviewsignal@localhost:5432/reviewsignal
+          REDIS_URL: redis://localhost:6379/0
+          SESSION_SECRET: ci-not-a-real-secret
+          CREDENTIAL_ENCRYPTION_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
         run: make check
