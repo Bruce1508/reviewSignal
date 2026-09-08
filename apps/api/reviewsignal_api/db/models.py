@@ -450,6 +450,11 @@ class EvaluationRun(Base):
     evaluation_type: Mapped[str] = mapped_column(String(64), nullable=False)
     model_name: Mapped[str] = mapped_column(String(128), nullable=False)
     model_version: Mapped[str | None] = mapped_column(String(64))
+    # NULL for a workflow that runs no prompt. `evaluation.md` §30 lists the prompt
+    # version among the fields a run records: without it a prompted classifier's run
+    # cannot name the prompt it scored, and `evaluation.md` §23 cannot attribute a
+    # regression to a prompt change rather than to the model.
+    prompt_version: Mapped[str | None] = mapped_column(String(64))
     taxonomy_version_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("taxonomy_versions.id")
     )

@@ -236,6 +236,7 @@ job_id UUID NULL UNIQUE FK jobs
 evaluation_type VARCHAR
 model_name VARCHAR
 model_version VARCHAR NULL
+prompt_version VARCHAR NULL
 taxonomy_version_id UUID NULL
 taxonomy_version VARCHAR NULL
 dataset_version VARCHAR
@@ -247,7 +248,7 @@ created_at TIMESTAMPTZ
 `job_id` names the queued job that produced the run, and is unique so a retried job cannot record a second one — `record` is insert-only, and a duplicate would silently corrupt the baseline `evaluation.md` §23 compares against. It is NULL for a run recorded outside the queue.
 `taxonomy_version_id` links a run to a stored taxonomy; `taxonomy_version` is the version string the benchmark was labelled against, kept so a run still names its taxonomy when no `taxonomy_versions` row exists (`evaluation.md` §30).
 
-**Unresolved:** `evaluation.md` §30 lists `prompt_version` among the fields a run record stores, and this table has no such column. Phase 0 ships no prompted predictor, so nothing can populate it yet, and adding it means extending the `Predictor` protocol to report a prompt version. Recorded here rather than resolved silently: either this table gains the column, or §30 narrows the requirement to prompted workflows. Until then a prompted classifier's run cannot name the prompt it scored, which blocks `evaluation.md` §23 regression comparison from attributing a change to a prompt.
+`prompt_version` names the prompt a run scored and is NULL for a workflow that runs no prompt, which is every workflow in Phase 0. `evaluation.md` §30 requires it, and the `Predictor` protocol reports it so a prompted run cannot omit it silently: without it `evaluation.md` §23 could not attribute a regression to a prompt change.
 
 ## 17. `settings`
 ```text

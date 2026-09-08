@@ -36,6 +36,7 @@ class EvaluationRunRepository:
             evaluation_type=evaluation_type,
             model_name=result.model_name,
             model_version=result.model_version,
+            prompt_version=result.prompt_version,
             taxonomy_version_id=taxonomy_version_id,
             taxonomy_version=result.taxonomy_version,
             dataset_version=result.dataset_version,

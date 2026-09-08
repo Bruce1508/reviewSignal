@@ -26,12 +26,22 @@ class PredictedAspect:
 
 
 class Predictor(Protocol):
-    """`name` and `version` fill in `evaluation_runs` (`data-model.md` §16)."""
+    """`name`, `version` and `prompt_version` fill in `evaluation_runs`
+    (`data-model.md` §16)."""
 
     @property
     def name(self) -> str: ...
 
     @property
     def version(self) -> str | None: ...
+
+    @property
+    def prompt_version(self) -> str | None:
+        """The prompt this predictor ran, or None when it runs no prompt.
+
+        Required rather than optional so a prompted predictor cannot silently omit it
+        and leave its run unattributable (`evaluation.md` §30).
+        """
+        ...
 
     def predict(self, item: BenchmarkItem) -> Sequence[PredictedAspect]: ...

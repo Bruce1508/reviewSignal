@@ -43,6 +43,7 @@ def _record_run(
             evaluation_type=evaluation_type,
             model_name=model_name,
             model_version="v1",
+            prompt_version="classify-v3",
             taxonomy_version="taxonomy-2026-09-01",
             dataset_version="v0-test",
             metrics=metrics if metrics is not None else METRICS,
@@ -90,6 +91,10 @@ async def test_the_list_omits_the_metrics_body(client: AsyncClient) -> None:
     assert summary["evaluation_type"] == "classification"
     assert summary["dataset_version"] == "v0-test"
     assert summary["model_name"] == "stub"
+    # `prompt_version` reaches the response only through `from_attributes`; nothing in
+    # the route mentions it, so without this the field could vanish from the schema
+    # and every other assertion here would still pass.
+    assert summary["prompt_version"] == "classify-v3"
 
 
 async def test_one_run_is_one_row_carrying_every_metric_family(
@@ -193,6 +198,7 @@ class _StubPredictor:
 
     name = "stub-classifier"
     version = "v0"
+    prompt_version = None
 
     def predict(self, item: object) -> list[PredictedAspect]:
         return []
