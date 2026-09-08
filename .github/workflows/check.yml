@@ -38,11 +38,15 @@ jobs:
           --health-retries 10
 
     env:
-      # The three `Settings` fields with no default. Throwaway values for
-      # throwaway containers — none of this is a secret.
+      # Throwaway values for throwaway containers — none of this is a secret,
+      # and none of it decrypts anything that exists outside this job.
       DATABASE_URL: postgresql+psycopg://reviewsignal:reviewsignal@localhost:5432/reviewsignal
       REDIS_URL: redis://localhost:6379/0
       SESSION_SECRET: ci-not-a-real-secret
+      # Required despite defaulting to "" in `Settings`: core/crypto.py raises
+      # EncryptionKeyMissingError on an empty key, so the 20 tests that store a
+      # credential need a syntactically valid Fernet key, not merely a set one.
+      CREDENTIAL_ENCRYPTION_KEY: 8KQr2w9z_sX_-MFnpxPpsb_3WzcTg0LjWUDw15ryFiE=
 
     steps:
       - uses: actions/checkout@v4
