@@ -1,0 +1,76 @@
+# The full local gate (`make check`) run on every pull request and on `main`.
+# Service topology mirrors docker-compose.yml; the variable set is owned by
+# docs/deployment.md §11.
+name: check
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: reviewsignal
+          POSTGRES_PASSWORD: reviewsignal
+          POSTGRES_DB: reviewsignal
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U reviewsignal -d reviewsignal"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    env:
+      # The three `Settings` fields with no default. Throwaway values for
+      # throwaway containers — none of this is a secret.
+      DATABASE_URL: postgresql+psycopg://reviewsignal:reviewsignal@localhost:5432/reviewsignal
+      REDIS_URL: redis://localhost:6379/0
+      SESSION_SECRET: ci-not-a-real-secret
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
+          enable-cache: true
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      # `--locked` and `npm ci` fail on a stale lockfile. `make install` runs
+      # `uv sync` and `npm install`, which would quietly update one instead.
+      - name: Install dependencies
+        run: |
+          uv sync --locked
+          cd apps/web && npm ci
+
+      # Setup, not part of the gate: tests/conftest.py truncates tables but
+      # never creates them, so the schema must already exist.
+      - name: Apply migrations
+        run: make migrate
+
+      - name: Run the gate
+        run: make check
