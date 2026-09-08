@@ -177,8 +177,8 @@ Queues benchmark evaluation.
 {"evaluation_type":"classification"}
 ```
 `evaluation_type` names the workflow to evaluate, not a metric family: one run records
-one `evaluation_runs` row holding every family it produced (`data-model.md` §16).
-`evaluation_type` must be one of the workflows `data-model.md` §16 names; anything else
+one `evaluation_runs` row holding every family it produced (`model-runs.md` §2).
+`evaluation_type` must be one of the workflows `model-runs.md` §2 names; anything else
 is `VALIDATION_ERROR`, because a workflow that does not exist is a malformed request
 rather than a model that is temporarily down.
 Returns `MODEL_UNAVAILABLE` when the workflow is known but no predictor is registered

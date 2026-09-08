@@ -7,7 +7,8 @@ Read [`README.md`](README.md) for hierarchy and conflict rules. Product intent i
 by [`PRD.md`](PRD.md); the system boundary by [`architecture.md`](architecture.md). This
 model stores outputs from [`ai-pipeline.md`](ai-pipeline.md), supports contracts in
 [`api-spec.md`](api-spec.md), and stays compatible with
-[`deployment.md`](deployment.md) and [`evaluation.md`](evaluation.md).
+[`deployment.md`](deployment.md) and [`evaluation.md`](evaluation.md). The run-record
+tables it used to define now live in [`model-runs.md`](model-runs.md).
 
 ## 1. Principles
 - Preserve raw Google data.

@@ -277,6 +277,7 @@ tests/          api, db, workers
 | [`docs/architecture.md`](docs/architecture.md) | System boundaries and component responsibilities |
 | [`docs/ai-pipeline.md`](docs/ai-pipeline.md) | Taxonomy, classification, anomaly, and insight workflows |
 | [`docs/data-model.md`](docs/data-model.md) | PostgreSQL entities, versioning, retention |
+| [`docs/model-runs.md`](docs/model-runs.md) | `model_runs` and `evaluation_runs`: one execution each |
 | [`docs/api-spec.md`](docs/api-spec.md) | REST contracts, validation, async jobs |
 | [`docs/deployment.md`](docs/deployment.md) | Local and AWS topology, operations, failure handling |
 | [`docs/evaluation.md`](docs/evaluation.md) | Benchmarks, metrics, calibration, promotion gates |
