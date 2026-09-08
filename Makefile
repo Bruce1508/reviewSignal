@@ -36,14 +36,16 @@ worker: ## Run the RQ worker
 web: ## Run the Next.js dev server
 	cd $(WEB) && npm run dev
 
-format: ## Format Python
+format: ## Format Python and web
 	uv run ruff format .
+	cd $(WEB) && npm run format
 
 lint: ## Lint Python and web
 	uv run ruff check .
 	uv run ruff format --check .
 	uv run python -m tools.check_citations
 	cd $(WEB) && npm run lint
+	cd $(WEB) && npm run format:check
 
 citations: ## Report every `<doc>.md §N` citation and the heading it resolves to
 	uv run python -m tools.check_citations --report
