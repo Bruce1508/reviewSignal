@@ -54,4 +54,10 @@ statements, and resolve the conflict at the higher-level source of truth. A
 technical document must not silently change a product requirement; update the
 affected links and dependent documents after the decision is made.
 
-**Documentation rule:** every technical document stays at or below 300 physical lines and focuses on one responsibility.
+**Documentation rule:** every technical document stays at or below 150 physical lines and focuses on one responsibility.
+
+Six documents predate this limit and are still over it: `evaluation.md`, `deployment.md`,
+`architecture.md`, `api-spec.md`, `ai-pipeline.md`, and `data-model.md`. Split them the way
+`model-runs.md` was split out: move a section into its own document and leave a numbered
+stub behind, because `§N` citations resolve by heading number and renumbering breaks them
+all at once. New documents meet the limit from the start.
