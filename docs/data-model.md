@@ -10,6 +10,11 @@ model stores outputs from [`ai-pipeline.md`](ai-pipeline.md), supports contracts
 [`deployment.md`](deployment.md) and [`evaluation.md`](evaluation.md). The run-record
 tables it used to define now live in [`model-runs.md`](model-runs.md).
 
+**Split out of this document:** [`taxonomy-tables.md`](taxonomy-tables.md) (was sections 5-7),
+[`analysis-tables.md`](analysis-tables.md) (was sections 8-12), and
+[`operational-tables.md`](operational-tables.md) (was sections 13, 14, 17, and 18). Numbering
+here keeps its gaps so existing `§N` citations resolve.
+
 ## 1. Principles
 - Preserve raw Google data.
 - Keep normalized data queryable.
@@ -60,156 +65,44 @@ reviews are stored so rating and volume trends stay complete, with
 `analysis_status = 'skipped'` because there is nothing to classify.
 
 ## 5. `taxonomy_versions`
-Immutable taxonomy version.
-```text
-id UUID PK
-version_number INTEGER
-status VARCHAR
-created_by VARCHAR
-parent_version_id UUID NULL
-created_at TIMESTAMPTZ
-activated_at TIMESTAMPTZ NULL
-archived_at TIMESTAMPTZ NULL
-generation_model_run_id UUID NULL
-```
-Statuses: `candidate`, `active`, `archived`, `failed`. Only one active version.
+Moved to [`taxonomy-tables.md`](taxonomy-tables.md) §1. The heading stays so existing
+`data-model.md` §5 citations still resolve.
 
 ## 6. `taxonomy_nodes`
-```text
-id UUID PK
-taxonomy_version_id UUID FK
-parent_id UUID NULL FK
-name VARCHAR
-description TEXT
-slug VARCHAR
-depth INTEGER
-sort_order INTEGER
-created_at TIMESTAMPTZ
-```
-Constraint: `UNIQUE(taxonomy_version_id, slug)`.
+Moved to [`taxonomy-tables.md`](taxonomy-tables.md) §2. The heading stays so existing
+`data-model.md` §6 citations still resolve.
 
 ## 7. `taxonomy_changes`
-Audit log between versions.
-```text
-id UUID PK
-from_version_id UUID
-to_version_id UUID
-change_type VARCHAR
-source VARCHAR
-old_node_ids JSONB
-new_node_ids JSONB
-description TEXT
-created_at TIMESTAMPTZ
-```
-Types: `add`, `rename`, `merge`, `split`, `move`, `delete`, `rollback`.
+Moved to [`taxonomy-tables.md`](taxonomy-tables.md) §3. The heading stays so existing
+`data-model.md` §7 citations still resolve.
 
 ## 8. `review_analyses`
-One analysis pass of one review under one taxonomy/model state.
-```text
-id UUID PK
-review_id UUID FK
-taxonomy_version_id UUID FK
-model_run_id UUID FK
-classifier_type VARCHAR
-overall_confidence FLOAT NULL
-created_at TIMESTAMPTZ
-superseded_at TIMESTAMPTZ NULL
-```
-Classifier type: `llm`, `ml`, `hybrid`, `manual`. Keep previous analyses for auditability.
+Moved to [`analysis-tables.md`](analysis-tables.md) §1. The heading stays so existing
+`data-model.md` §8 citations still resolve.
 
 ## 9. `review_aspects`
-```text
-id UUID PK
-review_analysis_id UUID FK
-taxonomy_node_id UUID FK
-sentiment VARCHAR
-confidence FLOAT
-evidence_text TEXT
-source VARCHAR
-created_at TIMESTAMPTZ
-```
-Sentiment: `positive`, `neutral`, `negative`.
-Indexes: `taxonomy_node_id`, `sentiment`, `review_analysis_id`.
+Moved to [`analysis-tables.md`](analysis-tables.md) §2. The heading stays so existing
+`data-model.md` §9 citations still resolve.
 
 ## 10. `anomalies`
-```text
-id UUID PK
-taxonomy_node_id UUID FK
-taxonomy_version_id UUID FK
-period_start DATE
-period_end DATE
-observed_value FLOAT
-expected_value FLOAT
-anomaly_score FLOAT
-support_count INTEGER
-status VARCHAR
-method VARCHAR
-metadata JSONB
-created_at TIMESTAMPTZ
-```
-Statuses: `candidate`, `accepted`, `dismissed`, `resolved`.
+Moved to [`analysis-tables.md`](analysis-tables.md) §3. The heading stays so existing
+`data-model.md` §10 citations still resolve.
 
 ## 11. `insights`
-```text
-id UUID PK
-anomaly_id UUID NULL FK
-taxonomy_node_id UUID NULL FK
-title VARCHAR
-summary TEXT
-severity VARCHAR
-evidence_summary TEXT
-status VARCHAR
-generated_by_model_run_id UUID NULL
-created_at TIMESTAMPTZ
-updated_at TIMESTAMPTZ
-resolved_at TIMESTAMPTZ NULL
-manual_status_override BOOLEAN DEFAULT FALSE
-```
-Statuses: `new`, `monitoring`, `resolved`.
+Moved to [`analysis-tables.md`](analysis-tables.md) §4. The heading stays so existing
+`data-model.md` §11 citations still resolve.
 
 ## 12. `insight_actions`
-```text
-id UUID PK
-insight_id UUID FK
-action_text TEXT
-action_date DATE NULL
-note_text TEXT NULL
-status VARCHAR
-created_at TIMESTAMPTZ
-updated_at TIMESTAMPTZ
-```
-Statuses: `planned`, `in_progress`, `completed`, `cancelled`.
+Moved to [`analysis-tables.md`](analysis-tables.md) §5. The heading stays so existing
+`data-model.md` §12 citations still resolve.
 
 ## 13. `sync_runs`
-```text
-id UUID PK
-source VARCHAR
-started_at TIMESTAMPTZ
-finished_at TIMESTAMPTZ NULL
-status VARCHAR
-reviews_fetched INTEGER
-reviews_created INTEGER
-reviews_updated INTEGER
-error_message TEXT NULL
-cursor_state JSONB NULL
-```
-Statuses: `running`, `success`, `failed`, `partial`.
+Moved to [`operational-tables.md`](operational-tables.md) §1. The heading stays so existing
+`data-model.md` §13 citations still resolve.
 
 ## 14. `jobs`
-Application-level job tracking independent of the queue backend.
-```text
-id UUID PK
-job_type VARCHAR
-status VARCHAR
-payload JSONB
-attempt_count INTEGER
-max_attempts INTEGER
-queued_at TIMESTAMPTZ
-started_at TIMESTAMPTZ NULL
-finished_at TIMESTAMPTZ NULL
-error_message TEXT NULL
-```
-Statuses: `queued`, `running`, `succeeded`, `failed`, `dead_letter`.
+Moved to [`operational-tables.md`](operational-tables.md) §2. The heading stays so existing
+`data-model.md` §14 citations still resolve.
 
 ## 15. `model_runs`
 Moved to [`model-runs.md`](model-runs.md) §1. The heading stays so existing
@@ -220,33 +113,12 @@ Moved to [`model-runs.md`](model-runs.md) §2. The heading stays so existing
 `data-model.md` §16 citations still resolve.
 
 ## 17. `settings`
-```text
-id UUID PK
-key VARCHAR UNIQUE
-value JSONB
-updated_at TIMESTAMPTZ
-```
-Store non-secret configuration only. Secrets belong in environment/AWS secret storage.
+Moved to [`operational-tables.md`](operational-tables.md) §3. The heading stays so existing
+`data-model.md` §17 citations still resolve.
 
 ## 18. `source_credentials`
-Per-source OAuth credentials, encrypted at rest.
-```text
-id UUID PK
-source VARCHAR UNIQUE
-status VARCHAR
-account_id VARCHAR NULL
-location_id VARCHAR NULL
-access_token_encrypted BYTEA NULL
-refresh_token_encrypted BYTEA NULL
-token_expires_at TIMESTAMPTZ NULL
-scopes JSONB
-connected_at TIMESTAMPTZ NULL
-updated_at TIMESTAMPTZ
-```
-Statuses: `connected`, `disconnected`, `invalid`. A `connected` row must hold a
-refresh token. Deploy-time secrets stay in the environment (§17); a refresh token is
-issued at runtime by the OAuth callback, so it cannot be one, and ciphertext here is
-never returned by the API.
+Moved to [`operational-tables.md`](operational-tables.md) §4. The heading stays so existing
+`data-model.md` §18 citations still resolve.
 
 ## 19. Current vs Historical State
 Never destructively overwrite previous AI state. A review accumulates analyses, each
