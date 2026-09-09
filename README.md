@@ -213,6 +213,10 @@ Verify the whole thing:
 make check    # ruff · pyright · pytest · eslint · tsc · next build
 ```
 
+The same command runs in CI on every pull request and on `main`
+([`.github/workflows/check.yml`](.github/workflows/check.yml)), against service containers
+matching `docker-compose.yml`.
+
 > [!IMPORTANT]
 > `make up` must be running before `make check`. The tests exercise **real PostgreSQL constraints**
 > rather than mocking them — a test that passes because Python rejected a row would prove nothing
