@@ -98,7 +98,8 @@ Do not implement functionality that cannot be traced to a requirement or explici
 
 - One authoritative owner per contract.
 - Link instead of duplicating content.
-- Keep technical docs ≤150 lines. `docs/README.md` owns the rule and lists the exceptions.
+- Keep technical docs within the length limit `docs/README.md` sets; it owns the rule
+  and lists the exceptions.
 - Update affected docs when documented behavior or contracts change.
 
 ## Git Rules

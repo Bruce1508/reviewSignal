@@ -34,7 +34,7 @@ allowed-tools: Read, Grep, Glob, Edit, Write, Bash(git:*)
 - After an approved decision, update the owning document first, then its dependents.
 
 ## Documentation rules
-- Keep every technical document at or below 300 physical lines.
+- Keep every technical document within the length limit `docs/README.md` sets.
 - Keep one primary responsibility per file.
 - Link to the owning document instead of duplicating details.
 - Do not invent requirements, metrics, commands, or implementation status.
