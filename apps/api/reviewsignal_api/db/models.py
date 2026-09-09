@@ -104,7 +104,12 @@ class ModelRun(Base):
     model_version: Mapped[str | None] = mapped_column(String(64))
     prompt_version: Mapped[str | None] = mapped_column(String(64))
     taxonomy_version_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("taxonomy_versions.id", use_alter=True)
+        UUID(as_uuid=True),
+        ForeignKey(
+            "taxonomy_versions.id",
+            use_alter=True,
+            name="model_runs_taxonomy_version_id_fkey",
+        ),
     )
     input_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
     latency_ms: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
@@ -140,7 +145,12 @@ class TaxonomyVersion(Base):
     activated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     archived_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     generation_model_run_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("model_runs.id", use_alter=True)
+        UUID(as_uuid=True),
+        ForeignKey(
+            "model_runs.id",
+            use_alter=True,
+            name="taxonomy_versions_generation_model_run_id_fkey",
+        ),
     )
 
     __table_args__ = (
