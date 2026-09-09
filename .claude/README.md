@@ -92,7 +92,7 @@ requirement merely to match existing code.
 ## Maintenance Rules
 
 - Keep configuration instructions concise and project-specific.
-- Keep each technical document at or below 300 physical lines.
+- Keep each technical document within the length limit `docs/README.md` sets.
 - Keep one primary responsibility per file.
 - Link to the owning file instead of copying its details.
 - Add a skill, command, agent, or automation only for a recurring need.
