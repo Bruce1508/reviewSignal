@@ -10,6 +10,9 @@ owned by [`PRD.md`](PRD.md); topology follows
 serve [`api-spec.md`](api-spec.md), and emit signals consumed by
 [`evaluation.md`](evaluation.md).
 
+**Split out of this document:** [`operations.md`](operations.md) holds what were sections 17-31.
+Numbering here keeps its gaps so existing `§N` citations resolve.
+
 ## 1. Philosophy
 Use the simplest infrastructure that runs reliably, supports background jobs, protects the database, is easy to debug, and has a clear growth path. MVP does not use Kubernetes.
 
@@ -121,83 +124,17 @@ services:
 ```
 RDS is external.
 
-## 17. Deployment Flow
-```text
-git push
-→ tests
-→ build
-→ deploy EC2
-→ migrations
-→ restart containers
-→ health check
-```
-Deployment is still manual. GitHub Actions runs the `make check` gate on every pull
-request and on `main` (`.github/workflows/check.yml`), but it does not deploy.
-
-## 18. Database Migrations
-Use Alembic. Production order: backup/check → migrate → start API/worker → health check. Never edit production schema manually.
-
-## 19. Scheduled Jobs
-Daily Google sync can use worker scheduler or cron initially. EventBridge is a later option. Prefer the simplest mechanism that is visible and easy to debug.
-
 ## 20. Logging
-Log timestamp, service, level, request/job ID, event, error. Never log secrets or OAuth tokens.
-
-## 21. CloudWatch
-Send API logs, worker logs, sync/model failures, and system metrics.
-Minimum alerts: repeated sync failure, API unavailable, high disk usage, repeated worker failure, RDS storage warning.
+Moved to [`operations.md`](operations.md) §4. The heading stays so existing
+`deployment.md` §20 citations still resolve.
 
 ## 22. Health Checks
-Required:
-```text
-GET /api/v1/health
-GET /api/v1/system/status
-```
-Check API, PostgreSQL, Redis, worker freshness; report Ollama/model health separately.
-
-## 23. Backups
-Use RDS automated backups. Keep deployment config in Git except secrets. Take manual snapshots before risky migrations/releases when appropriate.
-
-## 24. Restore
-```text
-restore RDS snapshot
-→ update connection
-→ run required migrations
-→ restart API/worker
-→ verify health
-```
-Test restore procedures periodically.
-
-## 25. Google OAuth
-```text
-Settings → Connect Google → OAuth → callback → protected token storage
-```
-Only backend handles OAuth secrets. Tokens are encrypted with
-`CREDENTIAL_ENCRYPTION_KEY` and stored in `source_credentials`
-([`data-model.md`](data-model.md) §18); the key itself stays in the environment.
-
-## 26. Security Groups
-EC2: allow 80/443 from Internet; SSH only from trusted IP if used.  
-RDS: allow PostgreSQL only from app EC2/security group.
-
-## 27. Updates
-Regularly patch OS, Docker, Python/Node dependencies, Ollama. Model changes require benchmark evaluation before promotion.
-
-## 28. Cost Control
-Primary costs: EC2, RDS, possible GPU, storage/log retention.
-Principles: one EC2 initially, small RDS, no always-on GPU unless justified, bounded log retention, scale from measurements.
+Moved to [`operations.md`](operations.md) §6. The heading stays so existing
+`deployment.md` §22 citations still resolve.
 
 ## 29. Failure Scenarios
-- Google API unavailable: retry, retain last successful sync, show warning.
-- Worker crash: container restart + recoverable job.
-- Ollama unavailable: retry AI job; existing dashboard remains usable.
-- RDS unavailable: fail health check and pause write-dependent jobs.
-
-## 30. Scaling Triggers
-Split services only when API latency, queue backlog, model saturation, memory contention, or availability requirements justify it.
-
-## 31. Future AWS Path
-Possible: EC2→ECS/Fargate, Redis→ElastiCache, cron→EventBridge, queue→SQS, Ollama→dedicated GPU/vLLM. None are required for Maple Photo MVP.
+Moved to [`operations.md`](operations.md) §13. The heading stays so existing
+`deployment.md` §29 citations still resolve.
 
 ## 32. Summary
 ```text
