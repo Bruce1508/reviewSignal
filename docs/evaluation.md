@@ -10,6 +10,9 @@ the evaluation endpoints in [`api-spec.md`](api-spec.md), and production signals
 from [`deployment.md`](deployment.md), within the boundaries of
 [`architecture.md`](architecture.md).
 
+**Split out of this document:** [`taxonomy-insight-evaluation.md`](taxonomy-insight-evaluation.md)
+holds what were sections 12-22. Numbering here keeps its gaps so existing `§N` citations resolve.
+
 ## 1. Principle
 Do not accept `"the output looks good"` as validation. Taxonomy, classification, sentiment, confidence, anomaly detection, and recommendations need measurable evaluation.
 
@@ -58,53 +61,6 @@ Measure ML acceptance rate, LLM fallback rate, accuracy of accepted ML predictio
 
 ## 11. Threshold Selection
 Do not choose a confidence threshold arbitrarily. Tune it on validation/benchmark data to balance quality, fallback rate, and latency.
-
-## 12. Taxonomy Dimensions
-Evaluate coverage, overlap, fragmentation, stability, clarity, and actionability.
-
-## 13. Coverage
-Measure what percentage of reviews fit meaningful categories. Too many unmatched reviews indicate missing concepts; too many generic categories indicate poor specificity.
-
-## 14. Fragmentation
-Track category count, low-support categories, and median reviews per category. Too many tiny categories indicate over-fragmentation.
-
-## 15. Overlap
-Use human review plus semantic similarity between category descriptions as a signal. Similarity should trigger review, not automatic merging.
-
-## 16. Stability
-Run taxonomy generation on similar samples and compare semantic categories/hierarchy. Small sampling changes should not radically reshape the production taxonomy.
-
-## 17. Actionability
-Human rubric 1–5:
-```text
-1 = not useful
-5 = directly actionable
-```
-Example: `Customer Experience` is vague; `Wait Time` is actionable.
-
-## 18. Anomaly Evaluation
-Measure alert precision, false-positive rate, support count, and human usefulness. For Maple Photo, precision matters more than alert volume.
-
-## 19. Low-Volume Tests
-Explicitly test scenarios like `1→3 complaints`, `0→2`, steady low count, single spike, and gradual increase. Percentage change alone must not dominate alerts.
-
-## 20. Insight Evaluation
-Score 1–5 on evidence grounding, correctness, specificity, clarity, and business usefulness.
-
-## 21. Recommendation Evaluation
-Rubric:
-```text
-grounded
-actionable
-specific
-realistic
-non-redundant
-safe
-```
-Judge usefulness, not writing style.
-
-## 22. Hallucination Check
-Fail recommendations that invent staff counts, operational facts, unsupported causation, unseen data, or claims contradicting evidence. Target zero unsupported factual claims.
 
 ## 23. Regression Testing
 Every important model/prompt/taxonomy change reruns the benchmark against the current production baseline.
