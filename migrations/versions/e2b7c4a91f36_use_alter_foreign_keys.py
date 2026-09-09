@@ -25,11 +25,18 @@ same names are now declared in `db/models.py`, which is what stops autogenerate 
 reproposing the pair on every subsequent run and what lets the downgrade below name what
 it drops.
 
-No ON DELETE behaviour is specified, matching the ORM declarations exactly rather than
-improving on them: trading this drift for a different one would leave the chain no more
-trustworthy than it is today. Both columns are nullable and neither parent is deleted in
-normal operation - taxonomy versions are immutable (`data-model.md` §5) - so NO ACTION is
-the correct default here and not a placeholder.
+No ON DELETE behaviour is specified. That matches the ORM declarations, but what makes it
+correct rather than merely consistent is `data-model.md` §24, which requires model runs and
+taxonomy history both to be retained. Neither parent is deleted in normal operation, and
+neither alternative is admissible: CASCADE would delete taxonomy versions when a model run
+is removed, destroying retained history and possibly the active version, while SET NULL
+would erase the generation provenance that the audit and rollback trail in
+`data-model.md` §19 depends on.
+
+`c87f5e6195fd` asked this same question about `evaluation_runs.job_id` and reached the
+opposite answer, because `jobs` is deliberately absent from `data-model.md` §24 and a
+routine prune had to stay possible there. The precedent points the same way it did then;
+only the retention status of the parent differs.
 """
 
 from collections.abc import Sequence
