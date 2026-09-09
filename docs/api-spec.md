@@ -11,6 +11,9 @@ async AI behavior comes from [`ai-pipeline.md`](ai-pipeline.md), operations and
 health expectations come from [`deployment.md`](deployment.md), and quality
 evidence comes from [`evaluation.md`](evaluation.md).
 
+**Split out of this document:** [`api-dashboard.md`](api-dashboard.md) holds what was
+sections 3-7, 9, and 11. Numbering here keeps its gaps so existing `§N` citations resolve.
+
 ## 1. Conventions
 Success:
 ```json
@@ -28,96 +31,6 @@ Returns API/database/Redis health.
 
 ### `GET /system/status`
 Returns last sync, queue depth, failed jobs, active taxonomy, active model, and last insight run.
-
-## 3. Overview
-### `GET /overview`
-Query: `start_date`, `end_date`; default last 7 days.
-Returns review count, average rating, positive/negative themes, active insights, rating trend.
-
-## 4. Reviews
-### `GET /reviews`
-Filters: `page`, `page_size`, `q`, `rating`, `sentiment`, `category_id`, `start_date`, `end_date`.
-
-### `GET /reviews/{review_id}`
-Returns raw metadata, owner reply, active analysis, aspects, sentiment, confidence, evidence, taxonomy version.
-
-### `POST /reviews/{review_id}/reanalyze`
-Queues reanalysis and returns HTTP `202` with job ID.
-
-## 5. Taxonomy
-### `GET /taxonomy`
-Returns active taxonomy tree.
-
-### `GET /taxonomy/versions`
-Returns version history.
-
-### `GET /taxonomy/versions/{version_id}`
-Returns one historical taxonomy.
-
-### `GET /taxonomy/versions/{version_id}/diff`
-Returns changes against parent version.
-
-### `POST /taxonomy/rebuild`
-Queues automatic rebuild.
-
-### `POST /taxonomy/nodes`
-Request:
-```json
-{"parent_id":null,"name":"Wait Time","description":"Feedback about service delays."}
-```
-
-### `PATCH /taxonomy/nodes/{node_id}`
-Rename, edit description, or move node.
-
-### `POST /taxonomy/merge`
-```json
-{"source_node_ids":["uuid1","uuid2"],"target_name":"Staff Experience","target_description":"..."}
-```
-
-### `POST /taxonomy/split`
-Creates replacement nodes from one node.
-
-### `DELETE /taxonomy/nodes/{node_id}`
-Deletes a node in a new taxonomy version.
-
-### `POST /taxonomy/rollback/{version_id}`
-Creates a new active version from historical state.
-
-All taxonomy mutations create a new version and queue reclassification.
-
-## 6. Trends
-### `GET /trends/categories`
-Filters: `start_date`, `end_date`, `sentiment`, `category_id`.
-
-### `GET /trends/ratings`
-Returns rating history.
-
-### `GET /trends/summary`
-Returns biggest positive/negative movements.
-
-## 7. Insights
-### `GET /insights`
-Filters: `status`, `severity`, `category_id`, `start_date`, `end_date`.
-
-### `GET /insights/{insight_id}`
-Returns title, summary, severity, evidence, related reviews, status, actions, impact.
-
-### `PATCH /insights/{insight_id}/status`
-```json
-{"status":"monitoring"}
-```
-Manual update records override metadata.
-
-### `POST /insights/{insight_id}/actions`
-```json
-{"action_text":"Add extra coverage Friday evening.","action_date":"2026-09-05","note_text":"Two-week trial."}
-```
-
-### `PATCH /insights/{insight_id}/actions/{action_id}`
-Updates action/note/status.
-
-### `POST /insights/{insight_id}/recompute-impact`
-Queues impact analysis.
 
 ## 8. Google Business Profile
 ### `GET /google/status`
@@ -154,16 +67,6 @@ Queues full historical backfill.
 ### `POST /google/sync`
 Queues manual incremental sync.
 
-## 9. Jobs
-### `GET /jobs`
-Filters: `status`, `job_type`, `page`, `page_size`.
-
-### `GET /jobs/{job_id}`
-Returns status, attempts, timestamps, and error context.
-
-### `POST /jobs/{job_id}/retry`
-Requeues retryable failed/dead-letter job.
-
 ## 10. Evaluation
 ### `GET /evaluation/runs`
 Returns historical evaluation runs.
@@ -185,13 +88,6 @@ Returns `MODEL_UNAVAILABLE` when the workflow is known but no predictor is regis
 for it, so no job is queued that cannot succeed.
 
 These endpoints exist before the evaluation dashboard, which `PRD.md` places in Phase 3.
-
-## 11. Settings
-### `GET /settings`
-Returns safe config such as default date range, daily sync time, active LLM model, embedding model, classification threshold.
-
-### `PATCH /settings`
-Updates supported non-secret settings. Secrets are never returned.
 
 ## 12. Async Convention
 Long jobs return HTTP `202`:
