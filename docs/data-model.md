@@ -7,7 +7,8 @@ Read [`README.md`](README.md) for hierarchy and conflict rules. Product intent i
 by [`PRD.md`](PRD.md); the system boundary by [`architecture.md`](architecture.md). This
 model stores outputs from [`ai-pipeline.md`](ai-pipeline.md), supports contracts in
 [`api-spec.md`](api-spec.md), and stays compatible with
-[`deployment.md`](deployment.md) and [`evaluation.md`](evaluation.md).
+[`deployment.md`](deployment.md) and [`evaluation.md`](evaluation.md). The run-record
+tables it used to define now live in [`model-runs.md`](model-runs.md).
 
 ## 1. Principles
 - Preserve raw Google data.
@@ -211,44 +212,12 @@ error_message TEXT NULL
 Statuses: `queued`, `running`, `succeeded`, `failed`, `dead_letter`.
 
 ## 15. `model_runs`
-```text
-id UUID PK
-task VARCHAR
-provider VARCHAR
-model_name VARCHAR
-model_version VARCHAR NULL
-prompt_version VARCHAR NULL
-taxonomy_version_id UUID NULL
-input_count INTEGER
-latency_ms INTEGER
-success BOOLEAN
-fallback_used BOOLEAN
-output_valid BOOLEAN
-error_message TEXT NULL
-metadata JSONB
-created_at TIMESTAMPTZ
-```
+Moved to [`model-runs.md`](model-runs.md) §1. The heading stays so existing `§15`
+citations still resolve.
 
 ## 16. `evaluation_runs`
-```text
-id UUID PK
-job_id UUID NULL UNIQUE FK jobs
-evaluation_type VARCHAR
-model_name VARCHAR
-model_version VARCHAR NULL
-prompt_version VARCHAR NULL
-taxonomy_version_id UUID NULL
-taxonomy_version VARCHAR NULL
-dataset_version VARCHAR
-metrics JSONB
-notes TEXT NULL
-created_at TIMESTAMPTZ
-```
-`evaluation_type` names the workflow evaluated — `classification` today, and later `taxonomy`, `anomaly`, or `recommendation`. One run records one row: every metric family that pass produced (classification, sentiment, calibration) is nested inside `metrics`, and a family it could not measure is stored as null (`evaluation.md` §30).
-`job_id` names the queued job that produced the run, and is unique so a retried job cannot record a second one — `record` is insert-only, and a duplicate would silently corrupt the baseline `evaluation.md` §23 compares against. It is NULL for a run recorded outside the queue.
-`taxonomy_version_id` links a run to a stored taxonomy; `taxonomy_version` is the version string the benchmark was labelled against, kept so a run still names its taxonomy when no `taxonomy_versions` row exists (`evaluation.md` §30).
-
-`prompt_version` names the prompt a run scored and is NULL for a workflow that runs no prompt, which is every workflow in Phase 0. `evaluation.md` §30 requires it, and the `Predictor` protocol reports it so a prompted run cannot omit it silently: without it `evaluation.md` §23 could not attribute a regression to a prompt change.
+Moved to [`model-runs.md`](model-runs.md) §2. The heading stays so existing `§16`
+citations still resolve.
 
 ## 17. `settings`
 ```text

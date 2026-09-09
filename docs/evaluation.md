@@ -15,7 +15,7 @@ Do not accept `"the output looks good"` as validation. Taxonomy, classification,
 
 ## 2. Human Benchmark
 Create an initial manually reviewed benchmark of about 100 reviews. For each review label relevant taxonomy aspects and sentiment per aspect.
-Benchmark files live at `data/benchmarks/<dataset_version>.json`, not in PostgreSQL: `data-model.md` §16 refers to a dataset by version string and defines no benchmark entity. An item may carry no aspects; rating-only reviews are valid ground truth.
+Benchmark files live at `data/benchmarks/<dataset_version>.json`, not in PostgreSQL: `model-runs.md` §2 refers to a dataset by version string and defines no benchmark entity. An item may carry no aspects; rating-only reviews are valid ground truth.
 
 ## 3. Benchmark Versioning
 Store dataset version, taxonomy version, labeling date, labeler, and notes. Never silently rewrite ground truth; create a new version.
@@ -160,7 +160,8 @@ Only report real measured values.
 ## 34. Related Docs
 - [`architecture.md`](architecture.md): system boundaries and non-goals.
 - [`ai-pipeline.md`](ai-pipeline.md): workflows and model decisions being evaluated.
-- [`data-model.md`](data-model.md): `evaluation_runs`, `model_runs`, and version references.
+- [`model-runs.md`](model-runs.md): the `evaluation_runs` and `model_runs` tables.
+- [`data-model.md`](data-model.md): version references and the rest of the schema.
 - [`api-spec.md`](api-spec.md): evaluation run and history endpoints.
 - [`deployment.md`](deployment.md): production quality signals and operational constraints.
 

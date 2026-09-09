@@ -7,7 +7,7 @@ PRD.md (product source of truth: what/why)
         ↓
 architecture.md (system-level how and boundaries)
         ↓
-ai-pipeline.md · data-model.md · api-spec.md · deployment.md · evaluation.md
+ai-pipeline.md · data-model.md · model-runs.md · api-spec.md · deployment.md · evaluation.md
         ↓
 implementation and tests
 ```
@@ -26,6 +26,7 @@ from the technical documents alone.
 - [`architecture.md`](architecture.md) — system boundaries, components, lifecycle, and key decisions.
 - [`ai-pipeline.md`](ai-pipeline.md) — taxonomy, classification, anomaly, insight, and model workflows.
 - [`data-model.md`](data-model.md) — PostgreSQL entities, relationships, versioning, and retention.
+- [`model-runs.md`](model-runs.md) — `model_runs` and `evaluation_runs`: what happened during one execution.
 - [`api-spec.md`](api-spec.md) — REST contracts, validation, authentication, and async jobs.
 - [`deployment.md`](deployment.md) — local/AWS topology, operations, security, and failure handling.
 - [`evaluation.md`](evaluation.md) — benchmark, metrics, calibration, regression, and promotion gates.
