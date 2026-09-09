@@ -8,6 +8,12 @@ section up in that document's headings.
 Two failure modes are hard errors: a section the document does not have, and a `§N` that
 names no document at all. Neither is affected by what follows.
 
+The documents cite each other and themselves, so `docs/` is scanned as source too. Inside a
+document a bare `§N` means that same document — the convention every self-reference in
+`docs/` already follows, while every cross-document citation names its target. Attributing a
+bare `§N` to the file it sits in therefore agrees with how a reader reads it. Outside
+`docs/`, a bare `§N` stays a hard error: a Python docstring has no document of its own.
+
 `docs/PRD.md` is gitignored, so no clean checkout can verify its citations. Those are
 reported as `exempt`, not folded into `ok` or `skipped`: the headline count must never
 imply the top source of truth was checked when it could not be. Any other document that
@@ -26,6 +32,7 @@ SOURCE_GLOBS = (
     "tests/**/*.py",
     "migrations/**/*.py",
     "tools/**/*.py",
+    "docs/**/*.md",
 )
 
 # This linter's own test fixtures contain deliberately broken citations.
@@ -93,7 +100,7 @@ def _document_in(text: str) -> str | None:
     return named[-1] if named else None
 
 
-def parse_citations(text: str) -> list[Citation]:
+def parse_citations(text: str, self_document: str | None = None) -> list[Citation]:
     """Find every `§N` and attribute it to the document it belongs to.
 
     A document is looked for before the `§` on the same line, then as the bare `PRD`
@@ -102,6 +109,10 @@ def parse_citations(text: str) -> list[Citation]:
     one. A document merely mentioned nearby does not count, because attributing to the
     wrong document is worse than not attributing at all — the section resolves, so the
     report prints a heading that supports nothing and no one is warned.
+
+    `self_document` is the last fallback, and `check` sets it only when the text is itself
+    one of the cited documents. There a bare `§N` is a self-reference; everywhere else it
+    still names nothing, which is the error this gate was built to catch.
     """
     lines = text.splitlines()
     citations: list[Citation] = []
@@ -114,6 +125,8 @@ def parse_citations(text: str) -> list[Citation]:
             if document is None and number >= 2 and not before.strip():
                 wrapped = _WRAPPED_DOCUMENT.search(lines[number - 2])
                 document = wrapped.group(1) if wrapped else None
+            if document is None:
+                document = self_document
             citations.append(Citation(line=number, section=match.group(1), document=document))
     return citations
 
@@ -171,7 +184,8 @@ def check(root: Path) -> tuple[Report, Documents]:
             relative = path.relative_to(root).as_posix()
             if "__pycache__" in path.parts or relative in EXCLUDED:
                 continue
-            for citation in parse_citations(path.read_text(encoding="utf-8")):
+            self_document = path.name if path.name in documents else None
+            for citation in parse_citations(path.read_text(encoding="utf-8"), self_document):
                 citations.append(replace(citation, path=relative))
     return resolve(citations, documents), documents
 

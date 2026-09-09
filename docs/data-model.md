@@ -212,12 +212,12 @@ error_message TEXT NULL
 Statuses: `queued`, `running`, `succeeded`, `failed`, `dead_letter`.
 
 ## 15. `model_runs`
-Moved to [`model-runs.md`](model-runs.md) §1. The heading stays so existing `§15`
-citations still resolve.
+Moved to [`model-runs.md`](model-runs.md) §1. The heading stays so existing
+`data-model.md` §15 citations still resolve.
 
 ## 16. `evaluation_runs`
-Moved to [`model-runs.md`](model-runs.md) §2. The heading stays so existing `§16`
-citations still resolve.
+Moved to [`model-runs.md`](model-runs.md) §2. The heading stays so existing
+`data-model.md` §16 citations still resolve.
 
 ## 17. `settings`
 ```text

@@ -81,6 +81,34 @@ def test_a_dotted_section_number_is_kept_whole() -> None:
     assert citation.section == "3.1"
 
 
+def test_a_bare_section_inside_a_document_attributes_to_that_document() -> None:
+    """Every self-reference in `docs/` is written bare and every cross-document citation
+    names its target, so a bare number in a document means that document."""
+    (citation,) = parse_citations("A missed category is counted by §5.", "evaluation.md")
+
+    assert citation.document == "evaluation.md"
+    assert citation.section == "5"
+
+
+def test_a_named_document_beats_the_file_the_citation_sits_in() -> None:
+    """Self-attribution is the last fallback, never an override: a document that names a
+    target means the target, even when it is citing across and inward in one sentence."""
+    first, second = parse_citations(
+        "Counted by §5; the matrix spans the `data-model.md` §9 vocabulary.", "evaluation.md"
+    )
+
+    assert first.document == "evaluation.md"
+    assert second.document == "data-model.md"
+
+
+def test_a_bare_section_outside_a_document_stays_unattributed() -> None:
+    """Only a document has a document of its own. A migration docstring citing a bare
+    number names nothing a reader can follow, and that is still a hard error."""
+    (citation,) = parse_citations("Model runs are retained (§24).")
+
+    assert citation.document is None
+
+
 # --- Rule 2: headings are read as numbered sections ---------------------------
 
 
@@ -183,6 +211,10 @@ def test_every_citation_in_the_repository_resolves() -> None:
     # true while nothing was checked at all: proven by running `check` on a tree with no
     # `docs/`, which reported 162 skipped, 0 broken, and exited 0. These pin that shut.
     assert "evaluation.md" in documents, "docs/ did not parse; every citation would skip"
+    # `ok` staying above the floor does not prove markdown was walked: dropping `docs/`
+    # from the globs only moves the count back to what the Python sources alone produce.
+    sources = {citation.path for citation in report.ok}
+    assert any(p.endswith(".md") for p in sources), "docs/ is not being walked as source"
     assert len(report.ok) > 100, "almost nothing resolved; check the file globs"
     # Nothing may sit in `skipped`: every document cited either parses or is exempt by
     # policy. A misspelled document name shows up here and nowhere else.
