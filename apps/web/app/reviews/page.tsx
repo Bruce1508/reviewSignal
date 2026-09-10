@@ -102,7 +102,11 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Prom
               <tr key={review.id}>
                 <td>{formatDate(review.created_at)}</td>
                 <td>{"★".repeat(review.rating)}</td>
-                <td>{review.review_text ?? <span className="muted">No comment</span>}</td>
+                <td>
+                  <Link href={`/reviews/${review.id}`}>
+                    {review.review_text ?? <span className="muted">No comment</span>}
+                  </Link>
+                </td>
                 <td>{review.reviewer_name ?? "Anonymous"}</td>
                 <td>{review.analysis_status}</td>
               </tr>

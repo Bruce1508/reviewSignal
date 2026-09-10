@@ -102,6 +102,37 @@ export const getReviews = (page: number, pageSize: number, filters: ReviewFilter
   return apiGet<ReviewListPayload>(`/reviews?${params.toString()}`);
 };
 
+export interface ReviewAspectPayload {
+  category_id: string;
+  category_name: string;
+  sentiment: string;
+  confidence: number | null;
+  evidence_span: string | null;
+}
+
+export interface ReviewAnalysisPayload {
+  classifier_type: string;
+  overall_confidence: number | null;
+  taxonomy_version_number: number;
+  aspects: ReviewAspectPayload[];
+}
+
+export interface ReviewDetail {
+  id: string;
+  source: string;
+  rating: number;
+  review_text: string | null;
+  reviewer_name: string | null;
+  created_at: string;
+  updated_at: string;
+  owner_reply_text: string | null;
+  owner_reply_at: string | null;
+  analysis_status: string;
+  analysis: ReviewAnalysisPayload | null;
+}
+
+export const getReview = (reviewId: string) => apiGet<ReviewDetail>(`/reviews/${reviewId}`);
+
 export interface RatingTrendPoint {
   date: string;
   review_count: number;
