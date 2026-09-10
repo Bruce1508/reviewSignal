@@ -29,7 +29,13 @@ export interface ApiError {
  */
 export type ApiResponse<T> = { data: T; error: null } | { data: null; error: ApiError };
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api/v1";
+// `apiGet` only ever runs server-side, so it must use the container-internal address
+// when containerized: `NEXT_PUBLIC_API_BASE_URL`'s host-exposed port is unreachable
+// from inside the `web` container itself (docs/deployment.md §16).
+const BASE_URL =
+  process.env.API_INTERNAL_BASE_URL ??
+  process.env.NEXT_PUBLIC_API_BASE_URL ??
+  "http://localhost:8000/api/v1";
 
 export async function apiGet<T>(path: string): Promise<ApiResponse<T>> {
   try {

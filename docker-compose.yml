@@ -74,7 +74,11 @@ services:
       context: .
       dockerfile: infra/web.Dockerfile
     environment:
+      # Browser-facing: the host-exposed port, for any future client-side fetch.
       NEXT_PUBLIC_API_BASE_URL: http://localhost:8000/api/v1
+      # Server-side only: the web container's own SSR fetches and BFF routes must
+      # reach the API via the Compose network, not the host-exposed port above.
+      API_INTERNAL_BASE_URL: http://api:8000/api/v1
     ports:
       - "3000:3000"
     depends_on:
