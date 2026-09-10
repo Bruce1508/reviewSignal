@@ -7,7 +7,7 @@ PRD.md (product source of truth: what/why)
         ↓
 architecture.md (system-level how and boundaries)
         ↓
-ai-pipeline.md · data-model.md · model-runs.md · api-spec.md · deployment.md · evaluation.md
+subsystem documents (pipeline · data · API · runtime · evaluation)
         ↓
 implementation and tests
 ```
@@ -23,21 +23,43 @@ from the technical documents alone.
 
 ## Document map
 
-- [`architecture.md`](architecture.md) — system boundaries, components, lifecycle, and key decisions.
-- [`ai-pipeline.md`](ai-pipeline.md) — taxonomy, classification, anomaly, insight, and model workflows.
-- [`data-model.md`](data-model.md) — PostgreSQL entities, relationships, versioning, and retention.
+**System**
+- [`architecture.md`](architecture.md) — system shape, stack, repository layout, and key decisions.
+- [`subsystems.md`](subsystems.md) — what each subsystem is responsible for, and what it must not do.
+
+**AI pipeline**
+- [`ai-pipeline.md`](ai-pipeline.md) — pipeline overview, model abstraction, prompt versioning, failure handling.
+- [`taxonomy-pipeline.md`](taxonomy-pipeline.md) — discovering, reviewing, accepting, and rebuilding the taxonomy.
+- [`classification-pipeline.md`](classification-pipeline.md) — aspects, sentiment, evidence, and confidence routing.
+- [`insight-pipeline.md`](insight-pipeline.md) — metrics, anomalies, insights, and tracked actions.
+
+**Data**
+- [`data-model.md`](data-model.md) — principles, relationships, `reviews`, constraints, and retention.
+- [`taxonomy-tables.md`](taxonomy-tables.md) — taxonomy versions, nodes, and changes.
+- [`analysis-tables.md`](analysis-tables.md) — analyses, aspects, anomalies, insights, and actions.
+- [`operational-tables.md`](operational-tables.md) — sync runs, jobs, settings, and credentials.
 - [`model-runs.md`](model-runs.md) — `model_runs` and `evaluation_runs`: what happened during one execution.
-- [`api-spec.md`](api-spec.md) — REST contracts, validation, authentication, and async jobs.
-- [`deployment.md`](deployment.md) — local/AWS topology, operations, security, and failure handling.
-- [`evaluation.md`](evaluation.md) — benchmark, metrics, calibration, regression, and promotion gates.
+
+**API**
+- [`api-spec.md`](api-spec.md) — conventions, validation, authentication, errors, and the async contract.
+- [`api-dashboard.md`](api-dashboard.md) — the page-facing endpoints and the jobs they poll.
+
+**Runtime**
+- [`deployment.md`](deployment.md) — local and AWS topology, services, network, and environment.
+- [`operations.md`](operations.md) — release, monitoring, backup and restore, and failure response.
+
+**Evaluation**
+- [`evaluation.md`](evaluation.md) — benchmark, classifier metrics, regression, and promotion gates.
+- [`taxonomy-insight-evaluation.md`](taxonomy-insight-evaluation.md) — taxonomy quality, anomaly, insight, and recommendation scoring.
 
 ## Recommended reading order
 
 1. `PRD.md` to understand product intent and scope.
 2. `architecture.md` for system boundaries and non-goals.
-3. The relevant subsystem document: `ai-pipeline.md`, `data-model.md`, or `api-spec.md`.
-4. `deployment.md` for runtime and operational constraints.
-5. `evaluation.md` for quality evidence and release decisions.
+3. `subsystems.md` for the responsibility split between the parts.
+4. The relevant subsystem document from the map above, then only the siblings its links name.
+5. `deployment.md` and `operations.md` for runtime and operational constraints.
+6. `evaluation.md` for quality evidence and release decisions.
 
 For a feature, start with the PRD requirement, trace it to architecture, then
 follow the links from the relevant subsystem document. Read only the sibling
@@ -57,8 +79,11 @@ affected links and dependent documents after the decision is made.
 
 **Documentation rule:** every technical document stays at or below 150 physical lines and focuses on one responsibility.
 
-Six documents predate this limit and are still over it: `evaluation.md`, `deployment.md`,
-`architecture.md`, `api-spec.md`, `ai-pipeline.md`, and `data-model.md`. Split them the way
-`model-runs.md` was split out: move a section into its own document and leave a numbered
-stub behind, because `§N` citations resolve by heading number and renumbering breaks them
-all at once. New documents meet the limit from the start.
+Every document now meets it. To split one, move whole sections into a new document and
+never renumber what stays: `§N` citations resolve by heading number, so renumbering breaks
+them all at once. Leave a numbered stub behind for any section that is cited, and record
+the move in a **Split out of this document** line so the numbering gaps are explained.
+
+A bare `§N` inside moved text is a self-reference and moves with it, so it must be
+renumbered to the new document. `make check` reads `docs/` and catches this; a reader
+scanning the prose will not.
