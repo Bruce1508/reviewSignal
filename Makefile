@@ -3,7 +3,7 @@
 
 WEB := apps/web
 
-.PHONY: help install up down logs migrate revision api worker web check format lint citations typecheck test test-py test-web
+.PHONY: help install up down logs migrate revision seed api worker web check format lint citations typecheck test test-py test-web
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  %-12s %s\n", $$1, $$2}'
@@ -26,6 +26,9 @@ migrate: ## Apply migrations
 
 revision: ## Autogenerate a migration: make revision m="add x"
 	uv run alembic revision --autogenerate -m "$(m)"
+
+seed: ## Seed a synthetic corpus via the stub adapter (dashboard dev data)
+	uv run python -m tools.seed_stub_reviews
 
 api: ## Run the API with reload
 	uv run uvicorn reviewsignal_api.main:app --reload --port 8000
