@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
+import { LogoutButton } from "./logout-button";
 
 export const metadata: Metadata = {
   title: "ReviewSignal AI",
@@ -28,6 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 {label}
               </Link>
             ))}
+            <LogoutButton />
           </nav>
           {children}
         </div>

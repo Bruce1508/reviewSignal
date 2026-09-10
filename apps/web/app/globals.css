@@ -78,3 +78,125 @@ code {
   border-radius: 4px;
   font-size: 13px;
 }
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+.table th,
+.table td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.table th {
+  color: var(--muted);
+  font-weight: 500;
+}
+.muted {
+  color: var(--muted);
+}
+.pager {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  font-size: 14px;
+}
+.pager a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.filter-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.filter-form input,
+.filter-form select {
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 14px;
+}
+.filter-form button {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--bg);
+  cursor: pointer;
+  font-size: 14px;
+}
+.filter-form a {
+  color: var(--muted);
+  font-size: 14px;
+  text-decoration: none;
+}
+.login-form {
+  display: flex;
+  gap: 8px;
+  max-width: 320px;
+}
+.login-form input {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--fg);
+}
+.login-form button,
+.logout {
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--bg);
+  cursor: pointer;
+  font-size: 14px;
+}
+.logout {
+  margin-left: auto;
+  background: transparent;
+  color: var(--muted);
+}
+h2 {
+  font-size: 16px;
+  margin: 28px 0 10px;
+}
+.tree,
+.tree ul {
+  list-style: none;
+  padding-left: 18px;
+  margin: 0;
+}
+.tree {
+  padding-left: 0;
+}
+.tree li {
+  padding: 4px 0;
+  border-left: 1px solid var(--border);
+  padding-left: 12px;
+}
+.stat-row {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+.stat {
+  display: flex;
+  flex-direction: column;
+}
+.stat-value {
+  font-size: 26px;
+  font-weight: 600;
+}
+.error {
+  color: #c0392b;
+}
