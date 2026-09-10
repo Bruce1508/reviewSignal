@@ -20,6 +20,10 @@ An internal, local-first customer-intelligence platform built for **Maple Photo 
 
 </div>
 
+<p align="center">
+  <img src="docs/assets/readme-hero.png" alt="Customer reviews flowing through ReviewSignal analytics into an evidence-backed business action" width="100%">
+</p>
+
 ReviewSignal preserves Google Business Profile reviews, tracks rating and category trends, and is
 being built to discover a business-specific taxonomy, classify aspect-level sentiment, detect
 low-volume anomalies, and turn verified evidence into trackable actions.
@@ -33,9 +37,13 @@ low-volume anomalies, and turn verified evidence into trackable actions.
 
 ## 🎬 Demo
 
-<!-- TODO(demo): Record a 15–20 second, 1440×900 GIF from a freshly seeded local build. Show: sign in → Overview metrics → Reviews keyword/rating filters → Trends rating history → Settings. Save it as docs/assets/dashboard-demo.gif, then replace this comment with: <p align="center"><img src="docs/assets/dashboard-demo.gif" alt="ReviewSignal dashboard walkthrough" width="900"></p> -->
+<p align="center">
+  <img src="docs/assets/dashboard-preview.svg" alt="ReviewSignal overview dashboard populated with deterministic synthetic review data" width="100%">
+</p>
 
-<!-- TODO(screenshot): Capture the Overview page after `make seed` at 1440×900 in both light and dark mode. Crop browser chrome, keep the navigation and all three stat cards visible, and save the preferred version as docs/assets/dashboard-overview.png. Add it below the GIF as: ![ReviewSignal overview dashboard](docs/assets/dashboard-overview.png) -->
+<p align="center"><sub>Source-faithful dark-mode preview built from the shipped Overview contract and deterministic seed corpus.</sub></p>
+
+<!-- TODO(demo): Record a 15–20 second, 1440×900 GIF from a freshly seeded local build. Show: sign in → Overview metrics → Reviews keyword/rating filters → Trends rating history → Settings. Save it as docs/assets/dashboard-demo.gif, then replace this comment with: <p align="center"><img src="docs/assets/dashboard-demo.gif" alt="ReviewSignal dashboard walkthrough" width="900"></p> -->
 
 Use the real ingestion path with safe synthetic data while Google access is being configured:
 
