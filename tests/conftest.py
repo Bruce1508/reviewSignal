@@ -15,7 +15,6 @@ from reviewsignal_worker.db import get_sessionmaker, session_scope
 # Truncated between tests. Order does not matter: one multi-table TRUNCATE ... CASCADE
 # empties them together, and no child-first order exists anyway — `taxonomy_versions`
 # and `model_runs` reference each other (both `use_alter=True` in `db/models.py`).
-# `settings` is the one table not listed; no test writes it, so it carries no state.
 MANAGED_TABLES = (
     "review_aspects",
     "review_analyses",
@@ -31,6 +30,7 @@ MANAGED_TABLES = (
     "sync_runs",
     "jobs",
     "source_credentials",
+    "settings",
 )
 
 
