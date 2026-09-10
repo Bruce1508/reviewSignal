@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getInsights } from "@/lib/api";
 
@@ -42,7 +43,9 @@ export default async function InsightsPage() {
           <tbody>
             {data.map((insight) => (
               <tr key={insight.id}>
-                <td>{insight.title}</td>
+                <td>
+                  <Link href={`/insights/${insight.id}`}>{insight.title}</Link>
+                </td>
                 <td>{insight.severity}</td>
                 <td>{insight.status}</td>
                 <td>{formatDate(insight.created_at)}</td>
