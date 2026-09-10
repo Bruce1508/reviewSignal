@@ -2,310 +2,283 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-dark.svg">
-  <img src="docs/assets/logo-light.svg" alt="ReviewSignal AI" width="440">
+  <img src="docs/assets/logo-light.svg" alt="ReviewSignal AI" width="460">
 </picture>
 
-### An AI customer intelligence platform that turns Google reviews into an operating signal.
+### Turn Google reviews into an operating signal—not another sentiment dashboard.
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-3da639)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.12+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![Next.js](https://img.shields.io/badge/Next.js-15-000000?logo=nextdotjs&logoColor=white)](https://nextjs.org/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![Redis](https://img.shields.io/badge/Redis-RQ-DC382D?logo=redis&logoColor=white)](https://python-rq.org/)
-[![LangGraph](https://img.shields.io/badge/LangGraph-1C3C3C?logo=langchain&logoColor=white)](https://langchain-ai.github.io/langgraph/)
-[![Ollama](https://img.shields.io/badge/Ollama-Qwen-000000?logo=ollama&logoColor=white)](https://ollama.com/)
-![Milestone](https://img.shields.io/badge/milestone-0%20·%20foundation-e8a33d)
+An internal, local-first customer-intelligence platform built for **Maple Photo Imaging**.
+
+[![CI](https://img.shields.io/github/actions/workflow/status/Bruce1508/reviewSignal/check.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white&label=CI)](https://github.com/Bruce1508/reviewSignal/actions/workflows/check.yml)
+[![Version](https://img.shields.io/badge/version-0.1.0-1f5f4f?style=for-the-badge)](pyproject.toml)
+[![Python](https://img.shields.io/badge/Python-3.12%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-15-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![License](https://img.shields.io/badge/license-MIT-3da639?style=for-the-badge)](LICENSE)
+
+[Demo](#-demo) · [Architecture](#-architecture) · [Quick start](#-quick-start) · [Usage](#-usage) · [Roadmap](#-roadmap)
 
 </div>
 
-ReviewSignal AI is an internal customer intelligence platform built for **Maple Photo Imaging**, a
-real small business. It continuously ingests Google Business Profile reviews, discovers a taxonomy
-*from the customers' own language* rather than from a fixed list of categories, labels every review
-at the aspect level with its own sentiment and evidence, and detects when a theme starts moving
-against its historical baseline.
-
-The point is not to summarise reviews. It is to close a loop: notice a change, explain it with
-evidence, recommend one action, then measure whether the underlying signal actually improved.
-
-> [!NOTE]
-> **Milestone 0 — Project Foundation.** The repository, local runtime, database schema, job
-> lifecycle, and quality gates are built and verified. Review ingestion, taxonomy discovery, and
-> classification are specified but **not yet implemented** — they begin with Phase 0. Every section
-> below marks what exists today.
-
----
-
-## The feedback intelligence loop
-
-```mermaid
-flowchart LR
-    A[Google Business Profile] --> B[Ingest and preserve raw]
-    B --> C[Discover taxonomy]
-    C --> D[Classify aspects and sentiment]
-    D --> E[Aggregate trends]
-    E --> F[Detect anomalies statistically]
-    F --> G[Explain with evidence]
-    G --> H[Recommend one action]
-    H --> I[Measure before vs after]
-    I -.-> E
-```
-
-Statistics decide *whether* something is unusual. The language model only explains a pattern that
-has already been verified, and recommends against it. That ordering is deliberate: it is what keeps
-recommendations grounded in observed data instead of fluent invention.
-
----
-
-## What ReviewSignal does
-
-### Ingest
-
-- Backfills the complete Google review history, then syncs daily
-- Preserves the raw source payload alongside normalised columns, so any analysis can be recomputed
-- Stays idempotent across syncs via stable source identifiers
-- Sits behind a source-agnostic adapter, so Yelp or survey data can join later without touching the core
-
-### Understand
-
-- Builds a **hierarchical taxonomy from the review corpus** — no hard-coded business categories
-- Assigns zero, one, or many aspects per review, each with independent sentiment and confidence
-- Attaches a supporting quote as evidence for every label
-- Never exposes or persists hidden model reasoning
-
-### Detect
-
-- Compares each period against a relevant historical baseline rather than a fixed threshold
-- Uses **low-volume-aware** logic with minimum support, because a small business gets few reviews
-- Raises an alert only when the evidence is strong enough to act on
-
-### Act
-
-- Generates insights tied to observable signals, with facts kept separate from suggestions
-- Tracks each insight through `new → monitoring → resolved`, with operator notes and manual override
-- Estimates before-versus-after impact once an action is taken
-- Communicates uncertainty when evidence is weak instead of issuing a confident prescription
-
-### Stay consistent
-
-- Every taxonomy change creates a **new immutable version** with a recorded diff
-- Historical reviews are reclassified after an accepted change, so time series stay comparable
-- Rollback to any prior version is supported
-- Previous analyses are retained rather than overwritten, so any label can be audited
-
----
-
-## How it works
-
-### LLM-powered, not LLM-dependent
-
-The reasoning model is reserved for work that genuinely needs judgment. Everything else is ordinary
-software, statistics, or a small classifier — which is cheaper, faster, and far easier to test.
-
-| Handled by Qwen via Ollama | Handled by code, ML, or statistics |
-| --- | --- |
-| Taxonomy generation and refinement | Review syncing and persistence |
-| Difficult or novel classification | Routine classification via embeddings |
-| Grounded explanation of a verified anomaly | Trend aggregation and dashboard metrics |
-| Action recommendation | Anomaly detection itself |
-
-### Classification escalates only when it must
-
-```mermaid
-flowchart LR
-    R[Review] --> E[Embedding]
-    E --> M[ML classifier]
-    M --> G{Confidence}
-    G -->|high| A[Accept]
-    G -->|low or novel| Q[Qwen fallback]
-    Q --> A
-```
-
-### PostgreSQL is the system of record
-
-Fourteen tables carry raw reviews, versioned taxonomies, per-aspect analyses, anomalies, insights,
-actions, and the full job and model-run audit trail. Invariants live in the database, not in
-application code:
-
-| Invariant | Enforced by |
-| --- | --- |
-| Exactly one active taxonomy version | Partial unique index on `status = 'active'` |
-| Rating between 1 and 5 | `CHECK` constraint |
-| Confidence between 0 and 1 | `CHECK` constraint |
-| One record per source review | `UNIQUE` on `source_review_id` |
-| Valid sentiment and status values | `CHECK` constraints |
-
-A service-layer check would race under concurrent activation; a partial unique index cannot.
-
-### Long work never blocks a request
-
-Jobs are recorded in PostgreSQL and merely *transported* by Redis, so the queue backend stays
-replaceable:
-
-```text
-queued → running → succeeded
-                 → failed → (retries exhausted) → dead_letter
-```
-
-Failed jobs remain inspectable and can be requeued by hand.
-
----
-
-## Architecture
-
-```mermaid
-flowchart TD
-    G[Google Business Profile API] --> A[FastAPI]
-    W[Next.js dashboard] --> A
-    A --> D[(PostgreSQL)]
-    A --> R[(Redis)]
-    R --> Q[RQ worker]
-    Q --> L[LangGraph]
-    L --> O[Ollama and Qwen]
-    Q --> E[BGE embeddings]
-    Q --> M[scikit-learn]
-    Q --> S[Statistical analytics]
-    L --> D
-    M --> D
-    S --> D
-    D --> A
-```
-
-A modular monolith with asynchronous AI workers — simple enough for one developer to maintain,
-structured enough to grow. No Kubernetes, no microservices, no real-time streaming.
-
-| Layer | Choice | Why |
-| --- | --- | --- |
-| API | FastAPI | The AI/ML stack is Python-first |
-| Frontend | Next.js + TypeScript | Presentation only; never runs inference |
-| Database | PostgreSQL 16 | Single source of truth |
-| Queue | Redis + RQ | Simplest thing that survives a restart |
-| AI workflow | LangGraph | Iterative, stateful taxonomy work |
-| Runtime | Ollama + Qwen | Open-weight, local-first, no per-token cost |
-| Deployment | Docker Compose → EC2 + RDS | One box until measurement says otherwise |
-
----
-
-## Getting started
-
-**Requires** Docker, [`uv`](https://docs.astral.sh/uv/), and Node 22+.
-
-```bash
-git clone git@github.com:Bruce1508/reviewSignal.git
-cd reviewSignal
-cp .env.example .env      # .env is gitignored and never committed
-make install
-make up                   # PostgreSQL + Redis
-make migrate              # apply the baseline schema
-```
-
-Run the services in separate terminals:
-
-```bash
-make api      # http://localhost:8000/api/v1/health
-make worker
-make web      # http://localhost:3000
-```
-
-Verify the whole thing:
-
-```bash
-make check    # ruff · pyright · pytest · eslint · tsc · next build
-```
-
-The same command runs in CI on every pull request and on `main`
-([`.github/workflows/check.yml`](.github/workflows/check.yml)), against service containers
-matching `docker-compose.yml`.
+ReviewSignal preserves Google Business Profile reviews, tracks rating and category trends, and is
+being built to discover a business-specific taxonomy, classify aspect-level sentiment, detect
+low-volume anomalies, and turn verified evidence into trackable actions.
 
 > [!IMPORTANT]
-> `make up` must be running before `make check`. The tests exercise **real PostgreSQL constraints**
-> rather than mocking them — a test that passes because Python rejected a row would prove nothing
-> about the database.
+> **Current build:** the Google OAuth and ingestion path, encrypted credentials, durable RQ jobs,
+> evaluation harness, PostgreSQL schema, authenticated API, and six dashboard read pages are
+> implemented. Taxonomy generation, review classification, anomaly detection, and recommendation
+> generation are the next product stages—not shipped features. Google integration is contract-tested
+> against recorded payloads; a live sync still requires an approved Google API project and profile.
 
-Ollama runs natively on macOS for hardware acceleration; point `OLLAMA_BASE_URL` at it. A
-containerised Ollama is available via `docker compose --profile ollama up` where that is preferable.
+## 🎬 Demo
 
-<details>
-<summary><b>All make targets</b></summary>
+<!-- TODO(demo): Record a 15–20 second, 1440×900 GIF from a freshly seeded local build. Show: sign in → Overview metrics → Reviews keyword/rating filters → Trends rating history → Settings. Save it as docs/assets/dashboard-demo.gif, then replace this comment with: <p align="center"><img src="docs/assets/dashboard-demo.gif" alt="ReviewSignal dashboard walkthrough" width="900"></p> -->
 
-| Target | Does |
-| --- | --- |
-| `make install` | Install Python and web dependencies |
-| `make up` / `make down` | Start / stop PostgreSQL and Redis |
-| `make migrate` | Apply migrations |
-| `make revision m="..."` | Autogenerate a migration |
-| `make api` / `make worker` / `make web` | Run each service |
-| `make lint` / `make typecheck` / `make test` | Individual gates |
-| `make check` | Everything above |
+<!-- TODO(screenshot): Capture the Overview page after `make seed` at 1440×900 in both light and dark mode. Crop browser chrome, keep the navigation and all three stat cards visible, and save the preferred version as docs/assets/dashboard-overview.png. Add it below the GIF as: ![ReviewSignal overview dashboard](docs/assets/dashboard-overview.png) -->
 
-</details>
+Use the real ingestion path with safe synthetic data while Google access is being configured:
 
----
+```console
+$ make seed
+seeded stub corpus: fetched=150 created=150 updated=0 unchanged=0 unmappable=0
 
-## Project layout
-
-```text
-apps/api/       FastAPI — route → service → repository
-apps/web/       Next.js dashboard, six routes
-workers/        RQ worker and the job lifecycle
-packages/       reserved seams: ai, analytics, integrations
-migrations/     Alembic
-infra/          Dockerfiles
-docs/           specifications
-tests/          api, db, workers
+$ curl -sS http://localhost:8000/api/v1/health | python -m json.tool
+{
+  "data": {"status": "ok", "components": {"api": "ok", "database": "ok", "redis": "ok"}},
+  "error": null
+}
 ```
 
----
+The first seed on an empty database creates 150 deterministic reviews. Re-running it updates the
+same source IDs instead of creating duplicates.
 
-## Roadmap
+## ✨ Features
 
-- [x] **Milestone 0 — Foundation.** Monorepo, Docker Compose topology, FastAPI with response
-      envelope and health contracts, 14-table Alembic baseline, RQ job lifecycle, Next.js shell,
-      and a single `make check` gate.
-- [ ] **Phase 0 — Data & evaluation.** Google Business Profile connection, historical backfill,
-      a ~100-review human-labelled benchmark, and a baseline evaluation harness.
-- [ ] **Phase 1 — Core intelligence.** Taxonomy generation, historical classification with
-      aspect-level sentiment, daily sync, and the six dashboard pages.
-- [ ] **Phase 2 — Adaptive intelligence.** Low-volume anomaly detection, insight lifecycle,
-      taxonomy rebuild triggers, diffing, rollback, and reclassification.
-- [ ] **Phase 3 — Hardening.** Production observability, evaluation reporting, AWS hardening,
-      and backups.
+| Available today                                                                               | Product direction                                                               |
+| --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Google OAuth, account/location discovery, token refresh, and Fernet-encrypted credentials     | Corpus-driven hierarchical taxonomy—no seeded business labels                   |
+| Full backfill and incremental review sync through a source-neutral adapter                    | Multi-label aspect classification with sentiment, confidence, and evidence      |
+| Idempotent upserts that preserve rating-only reviews, owner replies, and raw payloads         | Hybrid embedding classifier with Qwen fallback for uncertain or novel reviews   |
+| Overview, review search/filtering, rating trends, taxonomy, insights, and settings read views | Low-volume-aware anomaly detection before any LLM explanation                   |
+| Versioned evaluation runs with classification, sentiment, and calibration metrics             | Evidence-grounded recommendations and before/after action tracking              |
+| Signed operator sessions, structured API errors, health checks, retries, and dead letters     | Taxonomy editing, immutable versions, rollback, and historical reclassification |
 
----
+## 🔄 How it works
 
-## Documentation
+The implemented ingestion flow keeps HTTP requests short and source data recoverable:
 
-| Document | Owns |
-| --- | --- |
-| [`docs/README.md`](docs/README.md) | Documentation map, reading order, conflict rules |
-| [`docs/architecture.md`](docs/architecture.md) | System boundaries and component responsibilities |
-| [`docs/ai-pipeline.md`](docs/ai-pipeline.md) | Taxonomy, classification, anomaly, and insight workflows |
-| [`docs/data-model.md`](docs/data-model.md) | PostgreSQL entities, versioning, retention |
-| [`docs/model-runs.md`](docs/model-runs.md) | `model_runs` and `evaluation_runs`: one execution each |
-| [`docs/api-spec.md`](docs/api-spec.md) | REST contracts, validation, async jobs |
-| [`docs/deployment.md`](docs/deployment.md) | Local and AWS topology, operations, failure handling |
-| [`docs/evaluation.md`](docs/evaluation.md) | Benchmarks, metrics, calibration, promotion gates |
+```mermaid
+sequenceDiagram
+    actor Operator
+    participant Web as Next.js dashboard
+    participant API as FastAPI
+    participant Queue as Redis / RQ
+    participant Worker as RQ worker
+    participant Google as Google Business Profile
+    participant DB as PostgreSQL
+    Operator->>Web: Sign in
+    Web->>API: Exchange password for signed cookie
+    Operator->>API: Connect Google + select location
+    API->>DB: Encrypt and store OAuth grant
+    API->>Queue: Queue backfill or incremental sync
+    Queue->>Worker: Deliver durable job ID
+    Worker->>Google: Refresh token and page reviews
+    Worker->>DB: Normalize + idempotently upsert each page
+    Web->>API: Read overview, reviews, and trends
+    API->>DB: Query current state
+```
 
-> [!WARNING]
-> The product requirements document (`docs/PRD.md`) is client-confidential and is **not published
-> here**. Links to it resolve in a local checkout and 404 on GitHub. Requirements must never be
-> inferred from the technical documents alone.
+The planned intelligence loop deliberately places deterministic measurement before language-model
+reasoning:
 
----
+```mermaid
+flowchart LR
+    R[Reviews] --> T[Discover taxonomy]
+    T --> C[Classify aspects + sentiment]
+    C --> A[Aggregate trends]
+    A --> S[Statistical anomaly gate]
+    S -->|verified evidence| L[LLM explanation]
+    L --> X[Track action + impact]
+    X -.-> A
+```
 
-## Project status
+## 🏗 Architecture
 
-Built in the open as a working internal tool for a live business, not a tutorial project. The
-differentiators are the adaptive taxonomy, the human-in-the-loop taxonomy lifecycle, low-volume
-anomaly detection, evaluation against human labels, and a measurable feedback-to-action loop.
+```mermaid
+flowchart TB
+    B[Browser] --> W[Next.js 15<br/>Server Components + auth bridge]
+    W -->|cookie-forwarded typed reads| A[FastAPI modular monolith]
+    A -->|async SQLAlchemy| P[(PostgreSQL 16)]
+    A -->|enqueue| R[(Redis 7 / RQ)]
+    R --> K[Synchronous worker]
+    A -->|OAuth exchange + profile discovery| G[Google Business Profile APIs]
+    K -->|paged review reads| G
+    K -->|job, sync, review, evaluation records| P
+    D[Versioned benchmark JSON] --> E[Evaluation harness]
+    K -->|run predictor + score output| E
+    E -->|persist metrics| P
+```
 
-APIs, schema, and product surfaces will keep evolving while the phases above land.
+| Engineering decision                                          | Why it matters                                                                                        |
+| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| **PostgreSQL owns state; Redis transports work**              | Queue infrastructure can change without losing the inspectable job lifecycle.                         |
+| **Commit ingestion page by page**                             | A mid-backfill failure retains completed work and records a truthful `partial` run.                   |
+| **Use the last successful run's start time as the watermark** | Reviews edited during the previous sync cannot fall into a timestamp gap.                             |
+| **Validate ground truth instead of coercing it**              | A malformed benchmark fails visibly rather than producing deceptively better scores.                  |
+| **Database-enforced invariants**                              | Ratings, confidence ranges, statuses, source IDs, and the single active taxonomy survive concurrency. |
+| **LLM-powered, not LLM-dependent**                            | The design reserves language models for semantic judgment; code and statistics own repeatable work.   |
 
----
+## 🧰 Tech stack
 
-## License
+| Layer              | Technology in this repository                                                          |
+| ------------------ | -------------------------------------------------------------------------------------- |
+| Web                | Next.js 15, React 19, TypeScript, Server Components                                    |
+| API                | Python 3.12+, FastAPI, Pydantic 2, Uvicorn                                             |
+| Persistence        | PostgreSQL 16, SQLAlchemy 2 async/sync sessions, Psycopg 3, Alembic                    |
+| Jobs               | Redis 7, RQ 2, bounded retry backoff, application-level dead-letter state              |
+| Integration        | Google Business Profile APIs, OAuth 2.0, HTTPX, Fernet encryption                      |
+| Evaluation         | Strict JSON datasets, micro/macro P/R/F1, sentiment confusion matrix, Brier score, ECE |
+| Quality            | Pytest, Ruff, Pyright, ESLint, Prettier, GitHub Actions                                |
+| Planned AI runtime | LangGraph, Ollama/Qwen, BGE embeddings, PyTorch, scikit-learn, Pandas/NumPy/SciPy      |
 
-ReviewSignal AI is released under the [MIT License](LICENSE).
+The planned AI tools are architectural choices documented in `docs/`; they are not installed or
+wired into v0.1.0 yet.
 
-The excluded product requirements document (`docs/PRD.md`) is client material and is not covered by
-this licence, because it is not distributed with this repository.
+## 🚀 Quick start
+
+### Prerequisites
+
+- Docker with Compose v2
+- [`uv`](https://docs.astral.sh/uv/) and Python 3.12+
+- Node.js 22+
+
+```bash
+git clone https://github.com/Bruce1508/reviewSignal.git
+cd reviewSignal
+cp .env.example .env
+
+make install
+make up
+make migrate
+make seed       # optional: populate the dashboard with synthetic reviews
+```
+
+Replace `SESSION_SECRET` and `OPERATOR_PASSWORD` in `.env`, then start three processes:
+
+```bash
+make api        # FastAPI:  http://localhost:8000  · OpenAPI: /docs
+make worker     # RQ worker: required for Google and evaluation jobs
+make web        # Dashboard: http://localhost:3000
+```
+
+Sign in at `http://localhost:3000/login` with `OPERATOR_PASSWORD`. `make up` intentionally starts
+only PostgreSQL and Redis; API, worker, and web stay visible in their own development terminals.
+
+## ⚙️ Configuration
+
+| Variable                                                          | Purpose                                                                            |
+| ----------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `APP_ENV`                                                         | `local` keeps cookies usable over HTTP; other values mark them `Secure`.           |
+| `DATABASE_URL`, `REDIS_URL`                                       | Required PostgreSQL and Redis connections.                                         |
+| `SESSION_SECRET`, `OPERATOR_PASSWORD`                             | Sign the 12-hour stateless session and authenticate the single operator.           |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` | Google OAuth application credentials and callback.                                 |
+| `CREDENTIAL_ENCRYPTION_KEY`                                       | Fernet key used to encrypt OAuth tokens in PostgreSQL.                             |
+| `OLLAMA_BASE_URL`, `OLLAMA_MODEL`, `EMBEDDING_MODEL`              | Declared model configuration; inference is not connected yet.                      |
+| `BENCHMARK_PATH`                                                  | Versioned JSON benchmark read by an evaluation job once a predictor is registered. |
+| `NEXT_PUBLIC_API_BASE_URL`                                        | Web-to-API base URL; defaults to `http://localhost:8000/api/v1`.                   |
+
+Generate a valid credential-encryption key after installing dependencies, then paste it into `.env`:
+
+```bash
+uv run python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+```
+
+See [`.env.example`](.env.example) for the complete local template. Never commit `.env`.
+
+## 🖥 Usage
+
+### Explore with synthetic reviews
+
+```bash
+make seed
+make api
+make web
+```
+
+Open `/overview`, filter `/reviews` by text/rating/date, and inspect `/trends`. The stub adapter uses
+the same ingestion service as Google but a separate `source="stub"` watermark.
+
+### Call the authenticated API
+
+```bash
+curl -sS -c /tmp/reviewsignal.cookies \
+  -H 'Content-Type: application/json' \
+  -d '{"password":"YOUR_OPERATOR_PASSWORD"}' \
+  http://localhost:8000/api/v1/auth/login
+
+curl -sS -b /tmp/reviewsignal.cookies \
+  'http://localhost:8000/api/v1/reviews?page=1&page_size=5&rating=5' \
+  | python -m json.tool
+```
+
+All documented API endpoints use `{"data": ..., "error": null}` or a stable structured error
+envelope.
+
+### Connect Google Business Profile
+
+1. Configure the Google OAuth variables and `CREDENTIAL_ENCRYPTION_KEY`; keep the worker running.
+2. Sign in to the dashboard, then open `http://localhost:8000/api/v1/google/connect` in that browser.
+3. After the callback, use `http://localhost:8000/docs` to list accounts, list locations, select one,
+   and submit `/google/backfill` or `/google/sync`.
+4. Follow `/system/status` and the worker log for queue depth, sync counts, retries, or failures.
+
+The evaluation API can list persisted runs today. Submitting a new run correctly returns
+`MODEL_UNAVAILABLE` until a predictor is registered; the shipped synthetic dataset proves the
+harness contract only and must not be reported as a real model result.
+
+## 🗂 Project structure
+
+```text
+apps/
+├── api/reviewsignal_api/   # routes → services → repositories; integrations + evaluation
+└── web/                    # Next.js dashboard and login/logout bridge
+workers/reviewsignal_worker # RQ entrypoint, lifecycle wrapper, ingestion/evaluation handlers
+migrations/                 # Alembic baseline plus schema evolution
+data/benchmarks/            # versioned evaluation datasets (currently synthetic only)
+tools/                      # synthetic seeder and documentation-citation gate
+packages/                   # reserved AI, analytics, and shared-integration seams
+infra/                      # API, worker, and web Dockerfiles
+docs/                       # architecture and subsystem contracts
+tests/                      # API, DB, worker, integration, evaluation, and tool coverage
+```
+
+Run the same gate used by CI:
+
+```bash
+make check    # Ruff + citation checks + ESLint + Prettier + Pyright + tsc + pytest + Next build
+```
+
+Tests use real PostgreSQL constraints and Redis/RQ behavior, so run `make up` and `make migrate`
+first. Start with the [documentation index](docs/README.md), then read the
+[architecture](docs/architecture.md), [API contract](docs/api-spec.md),
+[data model](docs/data-model.md), and [evaluation design](docs/evaluation.md).
+
+## 🗺 Roadmap
+
+- [x] Foundation: modular monolith, 15-table schema, job lifecycle, Docker topology, and CI gate.
+- [x] Google connector implementation: OAuth, encrypted tokens, profile selection, mapping, and sync.
+- [x] Evaluation foundation: strict dataset loader, metrics, run persistence, and queued job contract.
+- [x] Authenticated dashboard read surfaces and deterministic synthetic development corpus.
+- [ ] Complete live Google authorization/backfill and create the human-labelled benchmark.
+- [ ] Implement taxonomy discovery and multi-label aspect/sentiment classification.
+- [ ] Add confidence routing, low-volume anomaly detection, grounded insights, and action tracking.
+- [ ] Add taxonomy editing/version lifecycle, production observability, AWS hardening, and backups.
+
+## 👤 Author
+
+Built by **[Bruce Vo](https://github.com/Bruce1508)** as a production-oriented applied-AI system for
+a real small-business workflow—not a tutorial clone.
+
+Released under the [MIT License](LICENSE). The local, Git-ignored client PRD is not distributed with
+this repository; public architecture and implementation contracts live under [`docs/`](docs/README.md).
