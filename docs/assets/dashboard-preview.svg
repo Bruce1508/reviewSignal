@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">ReviewSignal AI overview dashboard preview</title>
+  <desc id="desc">A source-faithful dark-mode preview of the overview page populated with deterministic synthetic review data.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b0d10"/>
+      <stop offset="0.55" stop-color="#101a17"/>
+      <stop offset="1" stop-color="#0f1115"/>
+    </linearGradient>
+    <linearGradient id="brand" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#177a63"/>
+      <stop offset="1" stop-color="#3fd0a8"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="40%" r="65%">
+      <stop offset="0" stop-color="#3fd0a8" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#3fd0a8" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0V48" fill="none" stroke="#6fd3b4" stroke-opacity="0.035"/>
+    </pattern>
+    <filter id="shadow" x="-15%" y="-20%" width="130%" height="150%">
+      <feDropShadow dx="0" dy="28" stdDeviation="30" flood-color="#000000" flood-opacity="0.55"/>
+    </filter>
+    <filter id="softGlow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="8"/>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#background)"/>
+  <rect width="1600" height="900" fill="url(#grid)"/>
+  <ellipse cx="800" cy="410" rx="650" ry="420" fill="url(#glow)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="92" y="62" width="1416" height="776" rx="26" fill="#0f1115" stroke="#343a44" stroke-width="2"/>
+    <path d="M118 62H1482C1496.36 62 1508 73.64 1508 88V126H92V88C92 73.64 103.64 62 118 62Z" fill="#171a20"/>
+    <line x1="92" y1="126" x2="1508" y2="126" stroke="#2b3039" stroke-width="2"/>
+    <circle cx="132" cy="94" r="8" fill="#e76565"/>
+    <circle cx="160" cy="94" r="8" fill="#e7b65f"/>
+    <circle cx="188" cy="94" r="8" fill="#6ac487"/>
+    <rect x="610" y="79" width="380" height="30" rx="15" fill="#0f1115" stroke="#2b3039"/>
+    <circle cx="637" cy="94" r="5" fill="#6fd3b4" opacity="0.8"/>
+    <rect x="654" y="90" width="170" height="8" rx="4" fill="#59616d"/>
+  </g>
+
+  <g font-family="Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif">
+    <g transform="translate(148 162)">
+      <rect width="36" height="36" rx="10" fill="url(#brand)"/>
+      <path d="M9 10.5h18a4 4 0 0 1 4 4v8a4 4 0 0 1-4 4H17l-5.5 5v-5H9a4 4 0 0 1-4-4v-8a4 4 0 0 1 4-4Z" fill="#ffffff"/>
+      <rect x="12" y="19" width="3" height="4" rx="1" fill="#0f3d33"/>
+      <rect x="17" y="16" width="3" height="7" rx="1" fill="#177a63"/>
+      <rect x="22" y="13" width="3" height="10" rx="1" fill="#3fd0a8"/>
+      <text x="50" y="25" fill="#f1f3f5" font-size="18" font-weight="700" letter-spacing="-0.2">ReviewSignal</text>
+      <text x="174" y="25" fill="#6fd3b4" font-size="18">AI</text>
+    </g>
+
+    <g fill="#98a1ad" font-size="15">
+      <text x="390" y="186" fill="#e8eaed" font-weight="600">Overview</text>
+      <text x="486" y="186">Reviews</text>
+      <text x="568" y="186">Taxonomy</text>
+      <text x="666" y="186">Trends</text>
+      <text x="738" y="186">Insights</text>
+      <text x="819" y="186">Settings</text>
+      <text x="1362" y="186">Sign out</text>
+    </g>
+    <rect x="388" y="202" width="70" height="3" rx="1.5" fill="#6fd3b4"/>
+    <line x1="148" y1="224" x2="1452" y2="224" stroke="#2a2f38"/>
+
+    <text x="200" y="292" fill="#f4f5f7" font-size="30" font-weight="700" letter-spacing="-0.6">Overview</text>
+    <text x="200" y="326" fill="#929aa6" font-size="16">Sep 3 – Sep 10 · deterministic synthetic corpus</text>
+
+    <g transform="translate(200 364)">
+      <g>
+        <text y="40" fill="#f4f5f7" font-size="38" font-weight="700">6</text>
+        <text y="70" fill="#929aa6" font-size="15">Reviews</text>
+      </g>
+      <line x1="205" y1="2" x2="205" y2="76" stroke="#2a2f38"/>
+      <g transform="translate(254)">
+        <text y="40" fill="#f4f5f7" font-size="38" font-weight="700">4.5</text>
+        <text y="70" fill="#929aa6" font-size="15">Average rating</text>
+      </g>
+      <line x1="505" y1="2" x2="505" y2="76" stroke="#2a2f38"/>
+      <g transform="translate(554)">
+        <text y="40" fill="#f4f5f7" font-size="38" font-weight="700">0</text>
+        <text y="70" fill="#929aa6" font-size="15">Active insights</text>
+      </g>
+      <g transform="translate(830 0)">
+        <rect width="362" height="76" rx="12" fill="#14221e" stroke="#234b40"/>
+        <circle cx="38" cy="38" r="18" fill="#1f5f4f"/>
+        <path d="M29 38l6 6 12-13" fill="none" stroke="#8ce2c7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="70" y="32" fill="#dfe5e3" font-size="14" font-weight="600">Ingestion is healthy</text>
+        <text x="70" y="54" fill="#7f9c93" font-size="13">PostgreSQL + Redis connected</text>
+      </g>
+    </g>
+
+    <text x="200" y="500" fill="#f4f5f7" font-size="19" font-weight="700">Rating trend</text>
+    <g transform="translate(200 526)">
+      <rect width="1192" height="214" rx="14" fill="#12151a" stroke="#2a2f38"/>
+      <path d="M1 48H1191M1 89H1191M1 130H1191M1 171H1191" stroke="#262b33"/>
+      <g fill="#8e97a3" font-size="13" font-weight="600">
+        <text x="24" y="30">DAY</text>
+        <text x="430" y="30">REVIEWS</text>
+        <text x="800" y="30">AVERAGE RATING</text>
+      </g>
+      <g fill="#dce0e5" font-size="14">
+        <text x="24" y="75">Sep 3</text><text x="430" y="75">1</text><text x="800" y="75">5.0</text>
+        <text x="24" y="116">Sep 5</text><text x="430" y="116">2</text><text x="800" y="116">4.0</text>
+        <text x="24" y="157">Sep 7</text><text x="430" y="157">2</text><text x="800" y="157">4.5</text>
+        <text x="24" y="198">Sep 9</text><text x="430" y="198">1</text><text x="800" y="198">5.0</text>
+      </g>
+      <g fill="#e7b65f" font-size="13" letter-spacing="2">
+        <text x="855" y="75">★★★★★</text>
+        <text x="855" y="116">★★★★</text>
+        <text x="855" y="157">★★★★½</text>
+        <text x="855" y="198">★★★★★</text>
+      </g>
+    </g>
+
+    <g transform="translate(200 780)">
+      <circle cx="10" cy="10" r="10" fill="#1f5f4f"/>
+      <circle cx="10" cy="10" r="4" fill="#8ce2c7" filter="url(#softGlow)"/>
+      <circle cx="10" cy="10" r="4" fill="#8ce2c7"/>
+      <text x="32" y="15" fill="#8f98a4" font-size="13">Rendered from the shipped Overview contract and the repository's seeded dataset</text>
+    </g>
+  </g>
+</svg>
