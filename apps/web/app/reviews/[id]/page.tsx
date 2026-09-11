@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getReview } from "@/lib/api";
 
 function formatDate(iso: string) {
@@ -17,6 +17,9 @@ export default async function ReviewDetailPage({ params }: { params: Promise<{ i
   if (error) {
     if (error.code === "UNAUTHORIZED") {
       redirect("/login");
+    }
+    if (error.code === "RESOURCE_NOT_FOUND") {
+      notFound();
     }
     return (
       <main>
