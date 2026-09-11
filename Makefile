@@ -60,7 +60,8 @@ typecheck: ## Type-check Python and web
 test-py: ## Run Python tests (requires `make up`)
 	uv run pytest
 
-test-web: ## Build the web app
+test-web: ## Test and build the web app
+	cd $(WEB) && npm test
 	cd $(WEB) && npm run build
 
 test: test-py test-web ## Run all tests

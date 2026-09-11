@@ -8,7 +8,12 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api/v1";
+// Server-side only, like `lib/api.ts`'s `BASE_URL`: the container-internal address
+// takes priority when containerized (docs/deployment.md §16).
+const API_BASE_URL =
+  process.env.API_INTERNAL_BASE_URL ??
+  process.env.NEXT_PUBLIC_API_BASE_URL ??
+  "http://localhost:8000/api/v1";
 
 export async function POST(request: NextRequest) {
   const body = await request.text();
