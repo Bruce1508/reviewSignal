@@ -1,0 +1,48 @@
+# Build-context exclusions for every image in docker-compose.yml — all three services
+# build from the repository root, so this file governs all of them.
+#
+# Without it the `web` context transfers ~126MB (the host's `apps/web/node_modules` and
+# `.next`), against ~110kB for `api`. Worse, `infra/web.Dockerfile` runs `npm install`
+# and then `COPY apps/web ./` over the result, so host-built artifacts land on top of
+# the ones the image just built for its own platform.
+
+# Secrets. Compose supplies these at runtime via `env_file`, never at build time.
+.env
+.env.*
+!.env.example
+
+# Node build artifacts, reinstalled inside the image by `npm install`.
+**/node_modules
+**/.next
+**/out
+**/*.tsbuildinfo
+
+# Python caches and local virtualenvs, reinstalled inside the image by `uv sync`.
+**/__pycache__
+**/*.py[cod]
+.venv
+venv
+.pytest_cache
+.ruff_cache
+.mypy_cache
+**/*.egg-info
+
+# Version control and agent scratch space.
+.git
+.gitignore
+.claude
+.agents
+.codex
+
+# Local service state bind-mounted or volume-backed at runtime, never built in.
+postgres-data
+redis-data
+ollama-data
+
+# Not copied by any Dockerfile: docs, tests, tooling, and editor noise.
+docs
+tests
+tools
+.coverage
+htmlcov
+**/.DS_Store
