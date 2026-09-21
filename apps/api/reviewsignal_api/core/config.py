@@ -18,7 +18,10 @@ class Settings(BaseSettings):
     google_redirect_uri: str = ""
 
     ollama_base_url: str = "http://localhost:11434"
-    ollama_model: str = "qwen2.5:14b"
+    # Development default. `qwen3:8b` keeps the generation loop fast; `qwen3:30b-a3b`
+    # is the same call with a stronger model and is an environment change, not a
+    # code one. The previous default named a model that was never pulled.
+    ollama_model: str = "qwen3:8b"
     embedding_model: str = "BAAI/bge-small-en-v1.5"
     # Benchmark the `evaluation_run` job scores against (`docs/evaluation.md` §2).
     # Unset fails the job rather than silently scoring the synthetic placeholder.

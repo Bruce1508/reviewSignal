@@ -11,10 +11,12 @@ from collections.abc import Callable
 from reviewsignal_worker.jobs.evaluation import evaluation_run
 from reviewsignal_worker.jobs.ingest import google_backfill, google_sync
 from reviewsignal_worker.jobs.noop import noop
+from reviewsignal_worker.jobs.taxonomy import taxonomy_generate
 
 HANDLERS: dict[str, Callable[[dict, uuid.UUID], None]] = {
     "noop": noop,
     "google_backfill": google_backfill,
     "google_sync": google_sync,
     "evaluation_run": evaluation_run,
+    "taxonomy_generate": taxonomy_generate,
 }
